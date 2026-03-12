@@ -170,22 +170,90 @@ export function getMockEarnings(period: "today" | "week" | "month"): EarningsSum
 }
 
 // ============================================================
-// Mock Incoming Ride Request (for driver)
+// Mock Incoming Ride Requests (for driver — rotates through varied requests)
 // ============================================================
-export const MOCK_RIDE_REQUEST: RideRequest = {
-  id: "req1",
-  riderId: "rider123",
-  riderName: "Sarah Johnson",
-  riderRating: 4.8,
-  pickup: { latitude: 25.0781, longitude: -77.3431, name: "Bay Street", address: "Downtown Nassau" },
-  dropoff: { latitude: 25.0867, longitude: -77.3233, name: "Atlantis Resort", address: "Paradise Island" },
-  rideType: "standard",
-  estimatedFare: 16.5,
-  estimatedDuration: 12,
-  estimatedDistance: 6.8,
-  island: "nassau",
-  createdAt: new Date().toISOString(),
-};
+export const MOCK_RIDE_REQUESTS: RideRequest[] = [
+  {
+    id: "req1",
+    riderId: "rider123",
+    riderName: "Sarah Johnson",
+    riderRating: 4.8,
+    pickup: { latitude: 25.0781, longitude: -77.3431, name: "Bay Street", address: "Downtown Nassau" },
+    dropoff: { latitude: 25.0867, longitude: -77.3233, name: "Atlantis Resort", address: "Paradise Island" },
+    rideType: "standard",
+    estimatedFare: 16.5,
+    estimatedDuration: 12,
+    estimatedDistance: 6.8,
+    island: "nassau",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "req2",
+    riderId: "rider456",
+    riderName: "David Chen",
+    riderRating: 4.6,
+    pickup: { latitude: 25.0755, longitude: -77.4078, name: "Cable Beach", address: "West Bay St, Nassau" },
+    dropoff: { latitude: 25.039, longitude: -77.4662, name: "Nassau Airport", address: "Windsor Field Rd" },
+    rideType: "premium",
+    estimatedFare: 28.0,
+    estimatedDuration: 18,
+    estimatedDistance: 9.4,
+    island: "nassau",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "req3",
+    riderId: "rider789",
+    riderName: "Maria Santos",
+    riderRating: 4.9,
+    pickup: { latitude: 25.0788, longitude: -77.3458, name: "Prince George Wharf", address: "Woodes Rogers Walk" },
+    dropoff: { latitude: 25.0833, longitude: -77.3583, name: "Fish Fry", address: "Arawak Cay, Nassau" },
+    rideType: "standard",
+    estimatedFare: 9.5,
+    estimatedDuration: 8,
+    estimatedDistance: 3.2,
+    island: "nassau",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "req4",
+    riderId: "rider321",
+    riderName: "James Mitchell",
+    riderRating: 4.5,
+    pickup: { latitude: 25.0867, longitude: -77.3233, name: "Atlantis Resort", address: "Paradise Island" },
+    dropoff: { latitude: 25.0781, longitude: -77.3431, name: "Bay Street", address: "Downtown Nassau" },
+    rideType: "shared",
+    estimatedFare: 7.5,
+    estimatedDuration: 14,
+    estimatedDistance: 5.6,
+    island: "nassau",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "req5",
+    riderId: "rider654",
+    riderName: "Keisha Brown",
+    riderRating: 5.0,
+    pickup: { latitude: 25.039, longitude: -77.4662, name: "Nassau Airport", address: "Windsor Field Rd" },
+    dropoff: { latitude: 25.0755, longitude: -77.4078, name: "Cable Beach", address: "Baha Mar Blvd" },
+    rideType: "premium",
+    estimatedFare: 32.0,
+    estimatedDuration: 15,
+    estimatedDistance: 7.8,
+    island: "nassau",
+    createdAt: new Date().toISOString(),
+  },
+];
+
+// Keep backward compat
+export const MOCK_RIDE_REQUEST: RideRequest = MOCK_RIDE_REQUESTS[0];
+
+let _requestIndex = 0;
+export function getNextMockRideRequest(): RideRequest {
+  const req = { ...MOCK_RIDE_REQUESTS[_requestIndex % MOCK_RIDE_REQUESTS.length], id: `req_${Date.now()}`, createdAt: new Date().toISOString() };
+  _requestIndex++;
+  return req;
+}
 
 // ============================================================
 // Mock Active Ride

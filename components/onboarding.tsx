@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   textArea: { alignItems: "center", marginBottom: 24, marginTop: 20, minHeight: 100 },
-  pageTitle: { fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 10 },
+  pageTitle: { fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 10, color: "#ECEDEE" },
   pageSubtitle: { fontSize: 16, textAlign: "center", lineHeight: 24 },
   dotsRow: { flexDirection: "row", alignSelf: "center", gap: 6, marginBottom: 32 },
   dot: { height: 8, borderRadius: 4 },
