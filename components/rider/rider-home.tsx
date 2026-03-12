@@ -34,7 +34,77 @@ const DEST_DISTANCES: Record<string, { km: number; mins: number }> = {
   "4": { km: 6.8, mins: 14 },   // Cable Beach
   "5": { km: 3.5, mins: 9 },    // Cruise Port
   "6": { km: 4.1, mins: 10 },   // Fish Fry
+  "7": { km: 3.0, mins: 7 },    // Bay Street
+  "8": { km: 7.2, mins: 15 },   // Baha Mar
+  "9": { km: 2.8, mins: 6 },    // Junkanoo Beach
+  "10": { km: 2.1, mins: 5 },   // Queen's Staircase
+  "11": { km: 4.5, mins: 11 },  // Fort Charlotte
+  "12": { km: 2.9, mins: 7 },   // Straw Market
+  "13": { km: 9.0, mins: 16 },  // Comfort Suites
+  "14": { km: 4.0, mins: 9 },   // Potter's Cay
+  "15": { km: 2.5, mins: 6 },   // PMH
+  "16": { km: 5.5, mins: 12 },  // UB
+  "gb1": { km: 4.2, mins: 10 }, // Port Lucaya
+  "gb2": { km: 8.0, mins: 16 }, // GB Airport
+  "gb3": { km: 18.0, mins: 28 },// Lucayan Park
+  "gb4": { km: 5.5, mins: 12 }, // Taino Beach
+  "gb5": { km: 3.8, mins: 9 },  // Intl Bazaar
+  "gb6": { km: 10.0, mins: 18 },// Freeport Harbour
+  "ex1": { km: 3.0, mins: 8 },  // George Town
+  "ex2": { km: 6.5, mins: 14 }, // Exuma Airport
+  "ex3": { km: 4.0, mins: 10 }, // Stocking Island
+  "el1": { km: 5.0, mins: 12 }, // GHB Airport
+  "el2": { km: 8.0, mins: 18 }, // Harbour Island
+  "el3": { km: 12.0, mins: 22 },// Glass Window
+  "ab1": { km: 4.5, mins: 10 }, // Marsh Harbour
+  "ab2": { km: 7.0, mins: 15 }, // Hope Town
+  "bi1": { km: 3.0, mins: 7 },  // Resorts World
+  "bi2": { km: 5.0, mins: 11 }, // Bimini Airport
+  "an1": { km: 4.0, mins: 9 },  // Andros Airport
+  "an2": { km: 6.0, mins: 13 }, // Small Hope Bay
+  "li1": { km: 5.0, mins: 11 }, // Stella Maris
+  "li2": { km: 10.0, mins: 20 },// Dean's Blue Hole
 };
+
+// Saved places for the user
+const SAVED_PLACES: { label: string; icon: string; dest: PopularDestination }[] = [
+  {
+    label: "Home",
+    icon: "house.fill",
+    dest: {
+      id: "saved_home",
+      name: "Home",
+      address: "Eastern Road, Nassau",
+      icon: "house.fill",
+      location: { latitude: 25.0443, longitude: -77.3504, name: "Home", address: "Eastern Road, Nassau" },
+      island: "nassau",
+    },
+  },
+  {
+    label: "Work",
+    icon: "building.2.fill",
+    dest: {
+      id: "saved_work",
+      name: "Work",
+      address: "Frederick Street, Nassau",
+      icon: "building.2.fill",
+      location: { latitude: 25.0770, longitude: -77.3410, name: "Work", address: "Frederick Street, Nassau" },
+      island: "nassau",
+    },
+  },
+  {
+    label: "Airport",
+    icon: "paperplane.fill",
+    dest: {
+      id: "1",
+      name: "Lynden Pindling Intl Airport",
+      address: "Windsor Field Rd, Nassau",
+      icon: "paperplane.fill",
+      location: { latitude: 25.039, longitude: -77.4662, name: "Nassau Airport" },
+      island: "nassau",
+    },
+  },
+];
 
 const DRIVER_NAMES = [
   "Marcus Thompson", "Sandra Williams", "Devon Rolle",
@@ -60,14 +130,17 @@ export default function RiderHome() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const currentIsland = state.island;
-  const destinations = POPULAR_DESTINATIONS.filter((d) => d.island === currentIsland);
+  const islandDestinations = POPULAR_DESTINATIONS.filter((d) => d.island === currentIsland);
+  // When searching, also search across ALL islands for broader results
+  const allDestinations = POPULAR_DESTINATIONS;
   const filteredDestinations = searchText
-    ? destinations.filter(
+    ? allDestinations.filter(
         (d) =>
           d.name.toLowerCase().includes(searchText.toLowerCase()) ||
-          d.address.toLowerCase().includes(searchText.toLowerCase())
+          d.address.toLowerCase().includes(searchText.toLowerCase()) ||
+          (d.location.name && d.location.name.toLowerCase().includes(searchText.toLowerCase()))
       )
-    : destinations;
+    : islandDestinations;
 
   // Recent rides from history
   const recentDestinations = useMemo(() => {
@@ -460,14 +533,16 @@ export default function RiderHome() {
         {/* Saved places */}
         {!searchText && (
           <View style={styles.savedRow}>
-            <Pressable style={({ pressed }) => [styles.savedChip, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && { opacity: 0.7 }]}>
-              <IconSymbol name="house.fill" size={14} color={colors.primary} />
-              <Text style={[styles.savedChipText, { color: colors.foreground }]}>Home</Text>
-            </Pressable>
-            <Pressable style={({ pressed }) => [styles.savedChip, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && { opacity: 0.7 }]}>
-              <IconSymbol name="building.2.fill" size={14} color={colors.primary} />
-              <Text style={[styles.savedChipText, { color: colors.foreground }]}>Work</Text>
-            </Pressable>
+            {SAVED_PLACES.map((sp) => (
+              <Pressable
+                key={sp.label}
+                onPress={() => handleSelectDestination(sp.dest)}
+                style={({ pressed }) => [styles.savedChip, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && { opacity: 0.7 }]}
+              >
+                <IconSymbol name={sp.icon as any} size={14} color={colors.primary} />
+                <Text style={[styles.savedChipText, { color: colors.foreground }]}>{sp.label}</Text>
+              </Pressable>
+            ))}
             <Pressable style={({ pressed }) => [styles.savedChip, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && { opacity: 0.7 }]}>
               <IconSymbol name="plus" size={14} color={colors.muted} />
               <Text style={[styles.savedChipText, { color: colors.muted }]}>Add</Text>
@@ -483,7 +558,7 @@ export default function RiderHome() {
               <Pressable
                 key={i}
                 onPress={() => {
-                  const match = destinations.find((d) => d.name === r.name || d.location.name === r.name);
+                  const match = islandDestinations.find((d: PopularDestination) => d.name === r.name || d.location.name === r.name);
                   if (match) handleSelectDestination(match);
                 }}
                 style={({ pressed }) => [
@@ -505,8 +580,39 @@ export default function RiderHome() {
           </View>
         )}
 
+        {/* Suggested destinations when search is empty */}
+        {!searchText && (
+          <View style={styles.suggestedSection}>
+            <Text style={[styles.sectionLabel, { color: colors.muted }]}>Suggested for You</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {islandDestinations.slice(0, 5).map((dest: PopularDestination) => {
+                const dist = getDestDistance(dest);
+                return (
+                  <Pressable
+                    key={dest.id}
+                    onPress={() => handleSelectDestination(dest)}
+                    style={({ pressed }) => [
+                      styles.suggestedCard,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                      pressed && { opacity: 0.7 },
+                    ]}
+                  >
+                    <View style={[styles.suggestedIcon, { backgroundColor: colors.primary + "15" }]}>
+                      <IconSymbol name={dest.icon as any} size={18} color={colors.primary} />
+                    </View>
+                    <Text style={[styles.suggestedName, { color: colors.foreground }]} numberOfLines={1}>{dest.name}</Text>
+                    <Text style={[styles.suggestedEta, { color: colors.muted }]}>{dist.mins} min</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
         <Text style={[styles.sectionLabel, { color: colors.muted }]}>
-          {searchText ? "Results" : "Popular on " + ISLAND_LABELS[currentIsland].split("/")[0].trim()}
+          {searchText
+            ? `${filteredDestinations.length} result${filteredDestinations.length !== 1 ? "s" : ""} for "${searchText}"`
+            : "Popular on " + ISLAND_LABELS[currentIsland].split("/")[0].trim()}
         </Text>
 
         <FlatList
@@ -516,6 +622,7 @@ export default function RiderHome() {
           renderItem={({ item }) => {
             const dist = getDestDistance(item);
             const fare = calculateFare(dist.km, dist.mins, "standard");
+            const isOtherIsland = searchText && item.island !== currentIsland;
             return (
               <Pressable
                 onPress={() => handleSelectDestination(item)}
@@ -530,7 +637,9 @@ export default function RiderHome() {
                 </View>
                 <View style={styles.destInfo}>
                   <Text style={[styles.destName, { color: colors.foreground }]}>{item.name}</Text>
-                  <Text style={[styles.destAddr, { color: colors.muted }]}>{item.address}</Text>
+                  <Text style={[styles.destAddr, { color: colors.muted }]}>
+                    {item.address}{isOtherIsland ? " · " + ISLAND_LABELS[item.island] : ""}
+                  </Text>
                 </View>
                 <View style={styles.destMeta}>
                   <Text style={[styles.destEta, { color: colors.foreground }]}>{dist.mins} min</Text>
@@ -543,7 +652,7 @@ export default function RiderHome() {
             <View style={styles.emptyState}>
               <IconSymbol name="magnifyingglass" size={32} color={colors.border} />
               <Text style={[styles.emptyText, { color: colors.muted }]}>No destinations found</Text>
-              <Text style={[styles.emptySubtext, { color: colors.border }]}>Try a different search term</Text>
+              <Text style={[styles.emptySubtext, { color: colors.border }]}>Try searching for a place, address, or landmark</Text>
             </View>
           }
         />
@@ -660,7 +769,7 @@ export default function RiderHome() {
 
         {/* Quick destinations */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickDests}>
-          {destinations.slice(0, 4).map((dest) => {
+          {islandDestinations.slice(0, 4).map((dest: PopularDestination) => {
             const dist = getDestDistance(dest);
             return (
               <Pressable
@@ -826,6 +935,17 @@ const styles = StyleSheet.create({
   destMeta: { alignItems: "flex-end" },
   destEta: { fontSize: 14, fontWeight: "700" },
   destFare: { fontSize: 12, marginTop: 2 },
+  suggestedSection: { marginBottom: 12 },
+  suggestedCard: {
+    width: 110, alignItems: "center", paddingVertical: 14, paddingHorizontal: 8,
+    borderRadius: 14, borderWidth: 1, marginRight: 10,
+  },
+  suggestedIcon: {
+    width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center",
+    marginBottom: 8,
+  },
+  suggestedName: { fontSize: 12, fontWeight: "600", textAlign: "center" as const },
+  suggestedEta: { fontSize: 11, marginTop: 3 },
   emptyState: { paddingVertical: 48, alignItems: "center", gap: 8 },
   emptyText: { fontSize: 15, fontWeight: "500" },
   emptySubtext: { fontSize: 13 },
