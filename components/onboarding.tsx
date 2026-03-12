@@ -237,7 +237,7 @@ export default function Onboarding({ onComplete }: Props) {
           <View style={[styles.iconRingOuter, { borderColor: currentPage.color + "15" }]}>
             <View style={[styles.iconRingMiddle, { borderColor: currentPage.color + "25" }]}>
               <View style={[styles.iconCircle, { backgroundColor: currentPage.color }]}>
-                <IconSymbol name={currentPage.icon} size={48} color="#fff" />
+                <IconSymbol name={currentPage.icon} size={38} color="#fff" />
               </View>
             </View>
           </View>
@@ -288,32 +288,32 @@ const styles = StyleSheet.create({
   pageContainer: { flex: 1, paddingHorizontal: 24, paddingBottom: 32 },
   skipBtn: { alignSelf: "flex-end", paddingVertical: 12, paddingHorizontal: 4 },
   skipBtnText: { fontSize: 16, fontWeight: "500" },
-  iconArea: { alignItems: "center", justifyContent: "center", height: 220, marginTop: 20 },
+  iconArea: { alignItems: "center", justifyContent: "center", height: 180, marginTop: 12 },
   iconRingOuter: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
   iconRingMiddle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: 136,
+    height: 136,
+    borderRadius: 68,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
   iconCircle: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     alignItems: "center",
     justifyContent: "center",
   },
-  textArea: { alignItems: "center", marginBottom: 32, marginTop: 24 },
-  pageTitle: { fontSize: 28, fontWeight: "800", textAlign: "center", marginBottom: 12 },
+  textArea: { alignItems: "center", marginBottom: 24, marginTop: 20, minHeight: 100 },
+  pageTitle: { fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 10 },
   pageSubtitle: { fontSize: 16, textAlign: "center", lineHeight: 24 },
   dotsRow: { flexDirection: "row", alignSelf: "center", gap: 6, marginBottom: 32 },
   dot: { height: 8, borderRadius: 4 },

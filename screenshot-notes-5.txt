@@ -1,0 +1,9 @@
+Screenshot 5 - After rider flow enhancement:
+- Onboarding screen visible with dark navy background
+- Turquoise accent icon and button look polished
+- Title text still appears cut off/invisible - same issue as before
+- The "Skip" button is visible in top right
+- Subtitle text is visible
+- Dot indicators and Next button visible
+- Overall dark premium feel is maintained
+- Need to check if onboarding title is still clipped

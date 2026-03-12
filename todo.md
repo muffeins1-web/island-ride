@@ -87,3 +87,15 @@
 - [x] Wire favorite driver "Request This Driver" → full ride booking flow from Profile
 - [x] Wire ride history "Rebook" → full ride booking flow from Activity tab
 - [x] Use selected destination in ride creation for accurate dropoff info
+
+## Rider Booking Flow Enhancement
+- [x] Enhance destination search with address details, distance, recent/saved places
+- [x] Add realistic ETA calculation based on destination distance
+- [x] Add detailed fare breakdown (base fare, distance, time, service fee, total)
+- [x] Enhance ride options cards with ETA, capacity, fare range, and vehicle illustrations
+- [x] Enhance searching/matching screen with animated progress and cancel option
+- [x] Enhance driver assigned screen with driver details, vehicle info, and arrival ETA
+- [x] Enhance ride tracking with live progress simulation, route info, and contact options
+- [x] Enhance trip complete with detailed fare breakdown, route summary, and receipt
+- [x] Enhance rating screen with star selection, tip options, and compliment badges
+- [x] Ensure all transitions are smooth and clickable with no dead ends
