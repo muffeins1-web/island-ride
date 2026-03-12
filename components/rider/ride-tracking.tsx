@@ -6,6 +6,8 @@ import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
 import { RIDE_TYPE_CONFIG } from "@/lib/types";
 import type { ActiveRide, RideStatus } from "@/lib/types";
+import IslandMap from "@/components/ui/island-map";
+import type { MapMode } from "@/components/ui/island-map";
 import * as Haptics from "expo-haptics";
 
 interface Props {
@@ -105,47 +107,37 @@ export default function RideTracking({ ride, onComplete }: Props) {
     outputRange: ["0%", "100%"],
   });
 
+  const mapMode: MapMode = status === "in_progress" ? "trip_in_progress" : status === "driver_en_route" ? "driver_approaching" : "idle";
+
   return (
     <ScreenContainer>
-      {/* Map area */}
-      <View style={[styles.mapArea, { backgroundColor: colors.surface }]}>
-        <View style={styles.mapGrid}>
-          {[...Array(8)].map((_, i) => (
-            <View key={`h${i}`} style={[styles.gridLineH, { top: `${(i + 1) * 11}%`, backgroundColor: colors.border + "50" }]} />
-          ))}
-          {[...Array(8)].map((_, i) => (
-            <View key={`v${i}`} style={[styles.gridLineV, { left: `${(i + 1) * 11}%`, backgroundColor: colors.border + "50" }]} />
-          ))}
-        </View>
-
-        {/* Route path */}
-        <View style={[styles.routePath, { backgroundColor: colors.primary + "25" }]} />
-        <Animated.View style={[styles.routePathActive, { backgroundColor: colors.primary, width: progressWidth }]} />
-
-        {/* Markers */}
-        <View style={[styles.pickupMarker, { borderColor: colors.primary }]}>
-          <View style={[styles.pickupDot, { backgroundColor: colors.primary }]} />
-        </View>
-        <View style={[styles.dropoffMarker, { backgroundColor: GOLD }]}>
-          <IconSymbol name="mappin.and.ellipse" size={14} color="#fff" />
-        </View>
-        <View style={[styles.driverMarker, { backgroundColor: colors.foreground }]}>
-          <IconSymbol name="car.fill" size={16} color={colors.background} />
-        </View>
-
-        {/* Status pill */}
-        <View style={[styles.statusPill, { backgroundColor: currentStatus.color }]}>
-          <IconSymbol name={currentStatus.icon as any} size={14} color="#fff" />
-          <Text style={styles.statusPillText}>{currentStatus.title}</Text>
-        </View>
-
-        {/* Live fare badge */}
-        {status === "in_progress" && (
-          <View style={[styles.fareBadge, { backgroundColor: colors.background + "F0" }]}>
-            <Text style={[styles.fareBadgeLabel, { color: colors.muted }]}>Fare</Text>
-            <Text style={[styles.fareBadgeValue, { color: colors.primary }]}>${liveFare.toFixed(2)}</Text>
+      {/* Map area with IslandMap */}
+      <View style={[styles.mapArea]}>
+        <IslandMap
+          mode={mapMode}
+          showDrivers={false}
+          showPickup={true}
+          showDropoff={true}
+          showRoute={true}
+          showRiderLocation={status !== "in_progress"}
+          pickupLabel={ride.pickup.name || "Pickup"}
+          dropoffLabel={ride.dropoff.name || "Dropoff"}
+          routeProgress={status === "in_progress" ? elapsed / (ride.estimatedDuration || 15) : 0}
+        >
+          {/* Status pill */}
+          <View style={[styles.statusPill, { backgroundColor: currentStatus.color }]}>
+            <IconSymbol name={currentStatus.icon as any} size={14} color="#fff" />
+            <Text style={styles.statusPillText}>{currentStatus.title}</Text>
           </View>
-        )}
+
+          {/* Live fare badge */}
+          {status === "in_progress" && (
+            <View style={[styles.fareBadge, { backgroundColor: colors.background + "F0" }]}>
+              <Text style={[styles.fareBadgeLabel, { color: colors.muted }]}>Fare</Text>
+              <Text style={[styles.fareBadgeValue, { color: colors.primary }]}>${liveFare.toFixed(2)}</Text>
+            </View>
+          )}
+        </IslandMap>
       </View>
 
       {/* Bottom panel */}

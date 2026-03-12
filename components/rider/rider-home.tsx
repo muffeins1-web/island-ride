@@ -20,6 +20,7 @@ import type { PopularDestination, RideType, ActiveRide } from "@/lib/types";
 import RideOptions from "./ride-options";
 import RideTracking from "./ride-tracking";
 import RideComplete from "./ride-complete";
+import IslandMap from "@/components/ui/island-map";
 import * as Haptics from "expo-haptics";
 
 const GOLD = "#D4A853";
@@ -410,32 +411,42 @@ export default function RiderHome() {
   if (view === "matching") {
     return (
       <ScreenContainer>
-        <View style={[styles.matchingContainer, { backgroundColor: colors.background }]}>
-          {/* Animated rings */}
-          <Animated.View style={[styles.matchingPulse, { transform: [{ scale: pulseAnim }], borderColor: colors.primary + "10" }]}>
-            <View style={[styles.ringOuter, { borderColor: colors.primary + "20" }]}>
-              <View style={[styles.ringMiddle, { borderColor: colors.primary + "35" }]}>
-                <View style={[styles.ringInner, { backgroundColor: colors.primary }]}>
-                  <IconSymbol name="car.fill" size={36} color="#fff" />
-                </View>
-              </View>
-            </View>
-          </Animated.View>
+        {/* Map with searching animation */}
+        <View style={{ flex: 1 }}>
+          <IslandMap
+            mode="searching"
+            showDrivers={true}
+            showPickup={true}
+            showDropoff={!!selectedDestination}
+            showRoute={!!selectedDestination}
+            pickupLabel="You"
+            dropoffLabel={selectedDestination?.name}
+            driverCount={6}
+          />
+        </View>
 
-          <Text style={[styles.matchingTitle, { color: colors.foreground }]}>
-            Finding your driver
-          </Text>
-          <Text style={[styles.matchingSubtitle, { color: colors.muted }]}>
-            Searching nearby drivers on{"\n"}{ISLAND_LABELS[currentIsland]}
-          </Text>
+        {/* Bottom overlay */}
+        <View style={[styles.matchingOverlay, { backgroundColor: colors.background }]}>
+          <View style={[styles.handleBar, { backgroundColor: colors.border }]} />
+
+          <View style={styles.matchingHeader}>
+            <Animated.View style={[styles.matchingIconRing, { borderColor: colors.primary, transform: [{ scale: pulseAnim }] }]}>
+              <View style={[styles.matchingIconInner, { backgroundColor: colors.primary }]}>
+                <IconSymbol name="car.fill" size={22} color="#fff" />
+              </View>
+            </Animated.View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.matchingTitle, { color: colors.foreground }]}>Finding your driver</Text>
+              <Text style={[styles.matchingSubtitle, { color: colors.muted }]}>
+                {matchProgress < 30 ? "Scanning nearby drivers..." : matchProgress < 60 ? "Found available drivers..." : matchProgress < 90 ? "Matching best driver..." : "Almost there..."}
+              </Text>
+            </View>
+          </View>
 
           {/* Progress bar */}
           <View style={[styles.progressBarBg, { backgroundColor: colors.surface }]}>
             <View style={[styles.progressBarFill, { backgroundColor: colors.primary, width: `${matchProgress}%` as any }]} />
           </View>
-          <Text style={[styles.progressText, { color: colors.muted }]}>
-            {matchProgress < 30 ? "Scanning nearby drivers..." : matchProgress < 60 ? "Found available drivers..." : matchProgress < 90 ? "Matching best driver..." : "Almost there..."}
-          </Text>
 
           {/* Destination reminder */}
           {selectedDestination && (
@@ -665,76 +676,24 @@ export default function RiderHome() {
   return (
     <ScreenContainer>
       {/* Map Background */}
-      <View style={[styles.mapContainer, { backgroundColor: colors.surface }]}>
-        {/* Grid lines */}
-        <View style={styles.mapGrid}>
-          {[...Array(8)].map((_, i) => (
-            <View
-              key={`h${i}`}
-              style={[styles.gridLineH, { top: `${(i + 1) * 11}%`, backgroundColor: colors.border + "60" }]}
-            />
-          ))}
-          {[...Array(8)].map((_, i) => (
-            <View
-              key={`v${i}`}
-              style={[styles.gridLineV, { left: `${(i + 1) * 11}%`, backgroundColor: colors.border + "60" }]}
-            />
-          ))}
-        </View>
-
-        {/* Road-like paths */}
-        <View style={[styles.roadH, { top: "35%", backgroundColor: colors.border + "40" }]} />
-        <View style={[styles.roadH, { top: "65%", backgroundColor: colors.border + "40" }]} />
-        <View style={[styles.roadV, { left: "30%", backgroundColor: colors.border + "40" }]} />
-        <View style={[styles.roadV, { left: "70%", backgroundColor: colors.border + "40" }]} />
-
-        {/* Driver markers */}
-        {NEARBY_DRIVERS.map((_, i) => {
-          const positions = [
-            { top: "22%" as any, left: "18%" as any },
-            { top: "30%" as any, left: "55%" as any },
-            { top: "45%" as any, left: "35%" as any },
-            { top: "55%" as any, left: "72%" as any },
-            { top: "65%" as any, left: "25%" as any },
-            { top: "38%" as any, left: "80%" as any },
-          ];
-          const pos = positions[i] || positions[0];
-          return (
-            <View
-              key={i}
-              style={[
-                styles.driverMarker,
-                { backgroundColor: colors.foreground, top: pos.top, left: pos.left },
-              ]}
-            >
-              <IconSymbol name="car.fill" size={13} color={colors.background} />
-            </View>
-          );
-        })}
-
-        {/* Current location */}
-        <View style={styles.currentLocation}>
-          <View style={[styles.locPulse, { backgroundColor: colors.primary + "20" }]} />
-          <View style={[styles.locOuter, { borderColor: colors.primary }]}>
-            <View style={[styles.locInner, { backgroundColor: colors.primary }]} />
+      <View style={[styles.mapContainer]}>
+        <IslandMap mode="idle" showDrivers={true} driverCount={driverCount}>
+          {/* Island chip */}
+          <View style={[styles.islandChip, { backgroundColor: colors.background + "F0" }]}>
+            <IconSymbol name="location.fill" size={13} color={colors.primary} />
+            <Text style={[styles.islandChipText, { color: colors.foreground }]}>
+              {ISLAND_LABELS[currentIsland]}
+            </Text>
           </View>
-        </View>
 
-        {/* Island chip */}
-        <View style={[styles.islandChip, { backgroundColor: colors.background + "F0" }]}>
-          <IconSymbol name="location.fill" size={13} color={colors.primary} />
-          <Text style={[styles.islandChipText, { color: colors.foreground }]}>
-            {ISLAND_LABELS[currentIsland]}
-          </Text>
-        </View>
-
-        {/* Drivers nearby badge */}
-        <View style={[styles.driverCountBadge, { backgroundColor: colors.background + "F0" }]}>
-          <View style={[styles.driverCountDot, { backgroundColor: colors.success }]} />
-          <Text style={[styles.driverCountText, { color: colors.foreground }]}>
-            {driverCount} drivers nearby
-          </Text>
-        </View>
+          {/* Drivers nearby badge */}
+          <View style={[styles.driverCountBadge, { backgroundColor: colors.background + "F0" }]}>
+            <View style={[styles.driverCountDot, { backgroundColor: colors.success }]} />
+            <Text style={[styles.driverCountText, { color: colors.foreground }]}>
+              {driverCount} drivers nearby
+            </Text>
+          </View>
+        </IslandMap>
       </View>
 
       {/* Bottom Card */}
@@ -952,6 +911,22 @@ const styles = StyleSheet.create({
 
   // Matching
   matchingContainer: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 },
+  matchingOverlay: {
+    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20,
+    borderTopLeftRadius: 28, borderTopRightRadius: 28, marginTop: -28,
+    shadowColor: "#000", shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 8,
+  },
+  matchingHeader: {
+    flexDirection: "row", alignItems: "center", gap: 14, marginTop: 8, marginBottom: 14,
+  },
+  matchingIconRing: {
+    width: 52, height: 52, borderRadius: 26, borderWidth: 2.5,
+    alignItems: "center", justifyContent: "center",
+  },
+  matchingIconInner: {
+    width: 38, height: 38, borderRadius: 19,
+    alignItems: "center", justifyContent: "center",
+  },
   matchingPulse: { borderWidth: 2, borderRadius: 100, padding: 8, marginBottom: 36 },
   ringOuter: {
     width: 160, height: 160, borderRadius: 80, borderWidth: 2,

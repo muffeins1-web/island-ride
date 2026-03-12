@@ -8,6 +8,7 @@ import { ISLAND_LABELS, RIDE_TYPE_CONFIG } from "@/lib/types";
 import { getNextMockRideRequest, getMockEarnings, createMockActiveRide } from "@/lib/mock-data";
 import type { RideRequest, ActiveRide } from "@/lib/types";
 import DriverTrip from "./driver-trip";
+import IslandMap from "@/components/ui/island-map";
 import * as Haptics from "expo-haptics";
 
 const GOLD = "#D4A853";
@@ -151,69 +152,52 @@ export default function DriverHome() {
   return (
     <ScreenContainer>
       {/* Map area */}
-      <View style={[styles.mapArea, { backgroundColor: colors.surface }]}>
-        <View style={styles.mapGrid}>
-          {[...Array(8)].map((_, i) => (
-            <View key={`h${i}`} style={[styles.gridLineH, { top: `${(i + 1) * 11}%` as any, backgroundColor: colors.border + "50" }]} />
-          ))}
-          {[...Array(8)].map((_, i) => (
-            <View key={`v${i}`} style={[styles.gridLineV, { left: `${(i + 1) * 11}%` as any, backgroundColor: colors.border + "50" }]} />
-          ))}
-        </View>
-
-        {/* Demand heat zones */}
-        {isOnline && (
-          <>
-            <View style={[styles.heatZone, { backgroundColor: colors.primary + "18", top: "20%" as any, left: "15%" as any, width: 100, height: 100 }]} />
-            <View style={[styles.heatZone, { backgroundColor: GOLD + "20", top: "40%" as any, left: "55%" as any, width: 120, height: 120 }]} />
-            <View style={[styles.heatZone, { backgroundColor: colors.primary + "12", top: "60%" as any, left: "25%" as any, width: 80, height: 80 }]} />
-          </>
-        )}
-
-        {/* Current location with pulse */}
-        <View style={styles.currentLocation}>
+      <View style={[styles.mapArea]}>
+        <IslandMap
+          mode={isOnline ? "searching" : "idle"}
+          showDrivers={false}
+          showRiderLocation={true}
+          driverCount={0}
+        >
+          {/* Demand heat zones */}
           {isOnline && (
-            <RNAnimated.View
-              style={[
-                styles.locPulse,
-                { backgroundColor: colors.success + "25", transform: [{ scale: pulseAnim }] },
-              ]}
-            />
+            <>
+              <View style={[styles.heatZone, { backgroundColor: colors.primary + "18", top: "20%" as any, left: "15%" as any, width: 100, height: 100 }]} />
+              <View style={[styles.heatZone, { backgroundColor: GOLD + "20", top: "40%" as any, left: "55%" as any, width: 120, height: 120 }]} />
+              <View style={[styles.heatZone, { backgroundColor: colors.primary + "12", top: "60%" as any, left: "25%" as any, width: 80, height: 80 }]} />
+            </>
           )}
-          <View style={[styles.locOuter, { borderColor: isOnline ? colors.success : colors.muted }]}>
-            <View style={[styles.locInner, { backgroundColor: isOnline ? colors.success : colors.muted }]} />
+
+          {/* Island chip */}
+          <View style={[styles.islandChip, { backgroundColor: colors.background + "F0" }]}>
+            <IconSymbol name="location.fill" size={13} color={colors.primary} />
+            <Text style={[styles.islandChipText, { color: colors.foreground }]}>
+              {ISLAND_LABELS[state.island]}
+            </Text>
           </View>
-        </View>
 
-        {/* Island chip */}
-        <View style={[styles.islandChip, { backgroundColor: colors.background + "F0" }]}>
-          <IconSymbol name="location.fill" size={13} color={colors.primary} />
-          <Text style={[styles.islandChipText, { color: colors.foreground }]}>
-            {ISLAND_LABELS[state.island]}
-          </Text>
-        </View>
-
-        {/* Status badge */}
-        <View style={[styles.statusBadge, { backgroundColor: isOnline ? colors.success : colors.muted + "80" }]}>
-          <View style={styles.statusDot} />
-          <Text style={styles.statusBadgeText}>{isOnline ? "Online" : "Offline"}</Text>
-        </View>
-
-        {/* Searching indicator */}
-        {isOnline && !incomingRequest && (
-          <View style={[styles.searchingChip, { backgroundColor: colors.background + "E8" }]}>
-            <View style={[styles.searchingDot, { backgroundColor: colors.success }]} />
-            <Text style={[styles.searchingText, { color: colors.foreground }]}>{waitingText}</Text>
+          {/* Status badge */}
+          <View style={[styles.statusBadge, { backgroundColor: isOnline ? colors.success : colors.muted + "80" }]}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusBadgeText}>{isOnline ? "Online" : "Offline"}</Text>
           </View>
-        )}
 
-        {/* Demand indicator */}
-        {isOnline && (
-          <View style={[styles.demandChip, { backgroundColor: GOLD + "20" }]}>
-            <IconSymbol name="bolt.fill" size={12} color={GOLD} />
-            <Text style={[styles.demandText, { color: GOLD }]}>High demand nearby</Text>
-          </View>
-        )}
+          {/* Searching indicator */}
+          {isOnline && !incomingRequest && (
+            <View style={[styles.searchingChip, { backgroundColor: colors.background + "E8" }]}>
+              <View style={[styles.searchingDot, { backgroundColor: colors.success }]} />
+              <Text style={[styles.searchingText, { color: colors.foreground }]}>{waitingText}</Text>
+            </View>
+          )}
+
+          {/* Demand indicator */}
+          {isOnline && (
+            <View style={[styles.demandChip, { backgroundColor: GOLD + "20" }]}>
+              <IconSymbol name="bolt.fill" size={12} color={GOLD} />
+              <Text style={[styles.demandText, { color: GOLD }]}>High demand nearby</Text>
+            </View>
+          )}
+        </IslandMap>
       </View>
 
       {/* Bottom panel */}

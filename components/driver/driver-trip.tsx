@@ -5,6 +5,8 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { RIDE_TYPE_CONFIG } from "@/lib/types";
 import type { ActiveRide } from "@/lib/types";
+import IslandMap from "@/components/ui/island-map";
+import type { MapMode } from "@/components/ui/island-map";
 import * as Haptics from "expo-haptics";
 
 type TripPhase = "to_pickup" | "arriving" | "at_pickup" | "in_progress" | "complete";
@@ -264,75 +266,55 @@ export default function DriverTrip({ trip, onComplete }: Props) {
   return (
     <ScreenContainer>
       {/* Map area */}
-      <View style={[styles.mapArea, { backgroundColor: colors.surface }]}>
-        <View style={styles.mapGrid}>
-          {[...Array(8)].map((_, i) => (
-            <View key={`h${i}`} style={[styles.gridLineH, { top: `${(i + 1) * 11}%` as any, backgroundColor: colors.border + "50" }]} />
-          ))}
-          {[...Array(8)].map((_, i) => (
-            <View key={`v${i}`} style={[styles.gridLineV, { left: `${(i + 1) * 11}%` as any, backgroundColor: colors.border + "50" }]} />
-          ))}
-        </View>
-
-        {/* Route visualization */}
-        <View style={[styles.routeViz, { backgroundColor: colors.primary + "30" }]} />
-
-        {/* Driver pin (you) */}
-        <View style={[styles.driverPin, { backgroundColor: colors.success }]}>
-          <IconSymbol name="car.fill" size={18} color="#fff" />
-        </View>
-
-        {/* Destination pin */}
-        <View style={[styles.destPin, { backgroundColor: phase === "in_progress" ? GOLD : colors.primary }]}>
-          <IconSymbol name={phase === "in_progress" ? "mappin.and.ellipse" : "person.fill"} size={16} color="#fff" />
-        </View>
-
-        {/* Arriving pulse */}
-        {(phase === "arriving" || phase === "at_pickup") && (
-          <RNAnimated.View
-            style={[
-              styles.arrivingPulse,
-              { backgroundColor: colors.success + "20", transform: [{ scale: pulseAnim }] },
-            ]}
-          />
-        )}
-
-        {/* Phase badge */}
-        <View style={[styles.phaseBadge, { backgroundColor: phaseColor[phase] }]}>
-          <IconSymbol
-            name={phase === "to_pickup" ? "arrow.right" : phase === "arriving" ? "bell.fill" : phase === "at_pickup" ? "checkmark" : "car.fill"}
-            size={14}
-            color="#fff"
-          />
-          <Text style={styles.phaseText}>{phaseLabel[phase]}</Text>
-        </View>
-
-        {/* ETA overlay */}
-        {(phase === "to_pickup" || phase === "in_progress") && (
-          <View style={[styles.etaOverlay, { backgroundColor: colors.background + "E8" }]}>
-            <Text style={[styles.etaValue, { color: colors.foreground }]}>
-              {phase === "to_pickup" ? pickupEta : Math.ceil(tripEta)}
-            </Text>
-            <Text style={[styles.etaUnit, { color: colors.muted }]}>min</Text>
+      <View style={[styles.mapArea]}>
+        <IslandMap
+          mode={phase === "in_progress" ? "trip_in_progress" : phase === "to_pickup" || phase === "arriving" ? "driver_approaching" : "idle"}
+          showDrivers={false}
+          showPickup={phase !== "in_progress"}
+          showDropoff={true}
+          showRoute={true}
+          showRiderLocation={phase === "to_pickup" || phase === "arriving" || phase === "at_pickup"}
+          pickupLabel={trip.pickup.name || "Pickup"}
+          dropoffLabel={trip.dropoff.name || "Dropoff"}
+          routeProgress={phase === "in_progress" ? distanceCovered / trip.estimatedDistance : 0}
+        >
+          {/* Phase badge */}
+          <View style={[styles.phaseBadge, { backgroundColor: phaseColor[phase] }]}>
+            <IconSymbol
+              name={phase === "to_pickup" ? "arrow.right" : phase === "arriving" ? "bell.fill" : phase === "at_pickup" ? "checkmark" : "car.fill"}
+              size={14}
+              color="#fff"
+            />
+            <Text style={styles.phaseText}>{phaseLabel[phase]}</Text>
           </View>
-        )}
 
-        {/* Trip progress bar */}
-        {phase === "in_progress" && (
-          <View style={[styles.progressBarContainer, { backgroundColor: colors.background + "90" }]}>
-            <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
-              <View
-                style={[
-                  styles.progressBarFill,
-                  { backgroundColor: colors.primary, width: `${Math.min((distanceCovered / trip.estimatedDistance) * 100, 100)}%` as any },
-                ]}
-              />
+          {/* ETA overlay */}
+          {(phase === "to_pickup" || phase === "in_progress") && (
+            <View style={[styles.etaOverlay, { backgroundColor: colors.background + "E8" }]}>
+              <Text style={[styles.etaValue, { color: colors.foreground }]}>
+                {phase === "to_pickup" ? pickupEta : Math.ceil(tripEta)}
+              </Text>
+              <Text style={[styles.etaUnit, { color: colors.muted }]}>min</Text>
             </View>
-            <Text style={[styles.progressText, { color: colors.muted }]}>
-              {distanceCovered.toFixed(1)} / {trip.estimatedDistance} km
-            </Text>
-          </View>
-        )}
+          )}
+
+          {/* Trip progress bar */}
+          {phase === "in_progress" && (
+            <View style={[styles.progressBarContainer, { backgroundColor: colors.background + "90" }]}>
+              <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    { backgroundColor: colors.primary, width: `${Math.min((distanceCovered / trip.estimatedDistance) * 100, 100)}%` as any },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.progressText, { color: colors.muted }]}>
+                {distanceCovered.toFixed(1)} / {trip.estimatedDistance} km
+              </Text>
+            </View>
+          )}
+        </IslandMap>
       </View>
 
       {/* Bottom panel */}

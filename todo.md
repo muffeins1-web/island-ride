@@ -120,3 +120,17 @@
 - [x] Implement live search filtering as user types
 - [x] Add address details and distance for each result
 - [x] Match existing dark premium UI design
+
+## Map Experience Enhancement
+- [x] Build premium dark-styled map component with grid/road simulation
+- [x] Add clear rider location marker (pulsing blue dot)
+- [x] Add nearby driver markers with car icons and movement
+- [x] Add pickup pin marker (turquoise)
+- [x] Add destination pin marker (gold)
+- [x] Add animated route line during active trips
+- [x] Simulate driver movement during "searching for driver" state
+- [x] Simulate driver approaching pickup during "driver assigned" state
+- [x] Simulate trip in progress with driver moving along route
+- [x] Integrate enhanced map into rider-home.tsx, ride-tracking.tsx, driver-home.tsx, driver-trip.tsx
+- [x] Integrate enhanced map into all trip screens
+- [x] Match existing dark premium UI style
