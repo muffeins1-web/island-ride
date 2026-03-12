@@ -161,6 +161,18 @@ export interface DailyEarning {
   trips: number;
 }
 
+export interface FavoriteDriver {
+  id: string;
+  name: string;
+  rating: number;
+  vehicleInfo: VehicleInfo;
+  driverType: "taxi" | "rideshare";
+  totalRidesWithYou: number;
+  lastRideDate: string;
+  island: Island;
+  avatarColor: string;
+}
+
 export interface PopularDestination {
   id: string;
   name: string;

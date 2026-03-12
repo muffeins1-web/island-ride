@@ -44,6 +44,7 @@ const MAPPING = {
   "plus": "add",
   "minus": "remove",
   "heart.fill": "favorite",
+  "heart": "favorite-border",
   "bolt.fill": "flash-on",
   "sun.max.fill": "wb-sunny",
   "moon.fill": "nights-stay",

@@ -8,7 +8,10 @@ import { ISLAND_LABELS } from "@/lib/types";
 import type { Island } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 
-type ProfileView = "main" | "edit_name" | "select_island" | "settings" | "about";
+import FavoriteDrivers from "@/components/rider/favorite-drivers";
+import type { FavoriteDriver } from "@/lib/types";
+
+type ProfileView = "main" | "edit_name" | "select_island" | "settings" | "about" | "favorite_drivers";
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -36,6 +39,19 @@ export default function ProfileScreen() {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     switchRole();
   }, [switchRole]);
+
+  // ── Favorite Drivers ──
+  if (view === "favorite_drivers") {
+    return (
+      <FavoriteDrivers
+        onBack={() => setView("main")}
+        onRequestRide={(driver: FavoriteDriver) => {
+          // In a real app, this would trigger a ride request with driver preference
+          setView("main");
+        }}
+      />
+    );
+  }
 
   // ── Edit Name ──
   if (view === "edit_name") {
@@ -188,6 +204,20 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
+        {/* Favorite Drivers (rider mode only) */}
+        {state.role === "rider" && (
+          <View style={[styles.menuSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MenuItem
+              icon="heart.fill"
+              label="Favorite Drivers"
+              subtitle={state.favoriteDrivers.length > 0 ? `${state.favoriteDrivers.length} saved` : "Save drivers you love"}
+              colors={colors}
+              onPress={() => setView("favorite_drivers")}
+              accentColor={state.favoriteDrivers.length > 0 ? colors.error : undefined}
+            />
+          </View>
+        )}
+
         {/* Menu items */}
         <View style={[styles.menuSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <MenuItem
@@ -273,20 +303,23 @@ function MenuItem({
   subtitle,
   colors,
   onPress,
+  accentColor,
 }: {
   icon: any;
   label: string;
   subtitle: string;
   colors: any;
   onPress: () => void;
+  accentColor?: string;
 }) {
+  const iconColor = accentColor || colors.primary;
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.menuItem, pressed && { opacity: 0.7 }]}
     >
-      <View style={[styles.menuIcon, { backgroundColor: colors.primary + "15" }]}>
-        <IconSymbol name={icon} size={20} color={colors.primary} />
+      <View style={[styles.menuIcon, { backgroundColor: iconColor + "15" }]}>
+        <IconSymbol name={icon} size={20} color={iconColor} />
       </View>
       <View style={styles.menuContent}>
         <Text style={[styles.menuLabel, { color: colors.foreground }]}>{label}</Text>

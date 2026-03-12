@@ -11,6 +11,7 @@ import type {
   Location,
   RideRequest,
   PopularDestination,
+  FavoriteDriver,
 } from "./types";
 
 // ============================================================
@@ -29,6 +30,7 @@ interface AppState {
   hasOnboarded: boolean;
   incomingRequest: RideRequest | null;
   savedPlaces: PopularDestination[];
+  favoriteDrivers: FavoriteDriver[];
 }
 
 const initialEarnings: EarningsSummary = {
@@ -54,6 +56,7 @@ const defaultState: AppState = {
   hasOnboarded: false,
   incomingRequest: null,
   savedPlaces: [],
+  favoriteDrivers: [],
 };
 
 // ============================================================
@@ -70,6 +73,8 @@ type Action =
   | { type: "SET_ONBOARDED"; value: boolean }
   | { type: "SET_INCOMING_REQUEST"; request: RideRequest | null }
   | { type: "SET_SAVED_PLACES"; places: PopularDestination[] }
+  | { type: "ADD_FAVORITE_DRIVER"; driver: FavoriteDriver }
+  | { type: "REMOVE_FAVORITE_DRIVER"; driverId: string }
   | { type: "LOAD_STATE"; state: Partial<AppState> };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -98,6 +103,14 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, incomingRequest: action.request };
     case "SET_SAVED_PLACES":
       return { ...state, savedPlaces: action.places };
+    case "ADD_FAVORITE_DRIVER":
+      if (state.favoriteDrivers.some((d) => d.id === action.driver.id)) return state;
+      return { ...state, favoriteDrivers: [action.driver, ...state.favoriteDrivers] };
+    case "REMOVE_FAVORITE_DRIVER":
+      return {
+        ...state,
+        favoriteDrivers: state.favoriteDrivers.filter((d) => d.id !== action.driverId),
+      };
     case "LOAD_STATE":
       return { ...state, ...action.state };
     default:
@@ -114,6 +127,9 @@ interface AppContextType {
   switchRole: () => void;
   goOnline: () => void;
   goOffline: () => void;
+  addFavoriteDriver: (driver: FavoriteDriver) => void;
+  removeFavoriteDriver: (driverId: string) => void;
+  isFavoriteDriver: (driverId: string) => boolean;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -145,9 +161,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hasOnboarded: state.hasOnboarded,
       rideHistory: state.rideHistory.slice(0, 50),
       savedPlaces: state.savedPlaces,
+      favoriteDrivers: state.favoriteDrivers,
     };
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave)).catch(() => {});
-  }, [state.role, state.island, state.userName, state.hasOnboarded, state.rideHistory, state.savedPlaces]);
+  }, [state.role, state.island, state.userName, state.hasOnboarded, state.rideHistory, state.savedPlaces, state.favoriteDrivers]);
 
   const switchRole = useCallback(() => {
     const newRole = state.role === "rider" ? "driver" : "rider";
@@ -165,8 +182,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_DRIVER_STATUS", status: "offline" });
   }, []);
 
+  const addFavoriteDriver = useCallback(
+    (driver: FavoriteDriver) => {
+      dispatch({ type: "ADD_FAVORITE_DRIVER", driver });
+    },
+    []
+  );
+
+  const removeFavoriteDriver = useCallback(
+    (driverId: string) => {
+      dispatch({ type: "REMOVE_FAVORITE_DRIVER", driverId });
+    },
+    []
+  );
+
+  const isFavoriteDriver = useCallback(
+    (driverId: string) => {
+      return state.favoriteDrivers.some((d) => d.id === driverId);
+    },
+    [state.favoriteDrivers]
+  );
+
   return (
-    <AppContext.Provider value={{ state, dispatch, switchRole, goOnline, goOffline }}>
+    <AppContext.Provider value={{ state, dispatch, switchRole, goOnline, goOffline, addFavoriteDriver, removeFavoriteDriver, isFavoriteDriver }}>
       {children}
     </AppContext.Provider>
   );

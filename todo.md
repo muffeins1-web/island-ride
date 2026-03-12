@@ -40,3 +40,12 @@
 - [x] Add press animations to buttons and cards
 - [x] Ensure dark mode works across all screens
 - [x] Final UI polish and consistency check
+
+## Favorite Drivers Feature
+- [x] Add FavoriteDriver type to data models
+- [x] Add favorite drivers state and actions to app context (with AsyncStorage persistence)
+- [x] Add "favorite" heart button on ride complete screen
+- [x] Build Favorite Drivers list screen (accessible from Profile)
+- [x] Add "Request Favorite" option on favorite driver card to re-book
+- [x] Add favorite driver indicator when matched with a favorited driver
+- [x] Write unit tests for favorite drivers logic

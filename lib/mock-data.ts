@@ -6,6 +6,7 @@ import type {
   RideRequest,
   ActiveRide,
   Location,
+  FavoriteDriver,
 } from "./types";
 
 // ============================================================
@@ -218,6 +219,48 @@ export function createMockActiveRide(isRider: boolean): ActiveRide {
     eta: 4,
   };
 }
+
+// ============================================================
+// Mock Favorite Drivers (for demo)
+// ============================================================
+export const MOCK_FAVORITE_DRIVERS: FavoriteDriver[] = [
+  {
+    id: "driver456",
+    name: "Marcus Thompson",
+    rating: 4.9,
+    vehicleInfo: {
+      make: "Toyota",
+      model: "Camry",
+      year: 2024,
+      color: "White",
+      plateNumber: "NP-4521",
+      seats: 4,
+    },
+    driverType: "rideshare",
+    totalRidesWithYou: 5,
+    lastRideDate: "2026-03-10T14:30:00Z",
+    island: "nassau",
+    avatarColor: "#0A9396",
+  },
+  {
+    id: "driver789",
+    name: "Sandra Williams",
+    rating: 4.8,
+    vehicleInfo: {
+      make: "Honda",
+      model: "Accord",
+      year: 2023,
+      color: "Silver",
+      plateNumber: "NP-7832",
+      seats: 4,
+    },
+    driverType: "taxi",
+    totalRidesWithYou: 3,
+    lastRideDate: "2026-03-09T08:15:00Z",
+    island: "nassau",
+    avatarColor: "#E9A820",
+  },
+];
 
 // Nearby driver locations for map display (around Nassau)
 export const NEARBY_DRIVERS: Location[] = [

@@ -3,8 +3,11 @@ import { View, Text, Pressable, StyleSheet, Platform, ScrollView } from "react-n
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
-import type { ActiveRide } from "@/lib/types";
+import { useApp } from "@/lib/app-context";
+import type { ActiveRide, FavoriteDriver } from "@/lib/types";
 import * as Haptics from "expo-haptics";
+
+const AVATAR_COLORS = ["#0A9396", "#E9A820", "#005F73", "#EE6C4D", "#3D5A80", "#2A9D8F"];
 
 interface Props {
   ride: ActiveRide;
@@ -13,8 +16,11 @@ interface Props {
 
 export default function RideComplete({ ride, onDone }: Props) {
   const colors = useColors();
+  const { isFavoriteDriver, addFavoriteDriver, removeFavoriteDriver, state } = useApp();
   const [rating, setRating] = useState(0);
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
+
+  const isFaved = isFavoriteDriver(ride.driverId);
 
   const tipOptions = [0, 2, 5, 10];
 
@@ -27,6 +33,26 @@ export default function RideComplete({ ride, onDone }: Props) {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedTip(amount === selectedTip ? null : amount);
   }, [selectedTip]);
+
+  const handleToggleFavorite = useCallback(() => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (isFaved) {
+      removeFavoriteDriver(ride.driverId);
+    } else {
+      const driver: FavoriteDriver = {
+        id: ride.driverId,
+        name: ride.driverName,
+        rating: ride.driverRating,
+        vehicleInfo: ride.vehicleInfo,
+        driverType: "rideshare",
+        totalRidesWithYou: 1,
+        lastRideDate: new Date().toISOString(),
+        island: state.island,
+        avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+      };
+      addFavoriteDriver(driver);
+    }
+  }, [isFaved, ride, state.island, addFavoriteDriver, removeFavoriteDriver]);
 
   const total = ride.fare + (selectedTip || 0);
 
@@ -41,6 +67,48 @@ export default function RideComplete({ ride, onDone }: Props) {
           <Text style={[styles.successTitle, { color: colors.foreground }]}>Ride Complete!</Text>
           <Text style={[styles.successSubtitle, { color: colors.muted }]}>
             You arrived at {ride.dropoff.name || "your destination"}
+          </Text>
+        </View>
+
+        {/* Driver card with favorite button */}
+        <View style={[styles.driverCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.driverRow}>
+            <View style={[styles.driverAvatar, { backgroundColor: colors.primary }]}>
+              <Text style={styles.driverInitial}>{ride.driverName[0]}</Text>
+            </View>
+            <View style={styles.driverInfo}>
+              <Text style={[styles.driverName, { color: colors.foreground }]}>{ride.driverName}</Text>
+              <View style={styles.driverMeta}>
+                <IconSymbol name="star.fill" size={14} color={colors.warning} />
+                <Text style={[styles.driverRating, { color: colors.muted }]}>
+                  {ride.driverRating.toFixed(1)}
+                </Text>
+                <Text style={[styles.driverVehicle, { color: colors.muted }]}>
+                  {" · "}{ride.vehicleInfo.color} {ride.vehicleInfo.make} {ride.vehicleInfo.model}
+                </Text>
+              </View>
+            </View>
+            {/* Favorite heart button */}
+            <Pressable
+              onPress={handleToggleFavorite}
+              style={({ pressed }) => [
+                styles.favBtn,
+                {
+                  backgroundColor: isFaved ? colors.error + "15" : colors.surface,
+                  borderColor: isFaved ? colors.error + "40" : colors.border,
+                },
+                pressed && { transform: [{ scale: 0.9 }] },
+              ]}
+            >
+              <IconSymbol
+                name={isFaved ? "heart.fill" : "heart"}
+                size={22}
+                color={isFaved ? colors.error : colors.muted}
+              />
+            </Pressable>
+          </View>
+          <Text style={[styles.favHint, { color: isFaved ? colors.error : colors.muted }]}>
+            {isFaved ? "Saved to favorites!" : "Tap the heart to save this driver"}
           </Text>
         </View>
 
@@ -159,6 +227,64 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: "center",
   },
+  // Driver card with favorite
+  driverCard: {
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  driverRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  driverAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  driverInitial: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  driverInfo: {
+    flex: 1,
+  },
+  driverName: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  driverMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginTop: 3,
+  },
+  driverRating: {
+    fontSize: 13,
+  },
+  driverVehicle: {
+    fontSize: 13,
+  },
+  favBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  favHint: {
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 10,
+    fontWeight: "500",
+  },
+  // Fare
   fareCard: {
     padding: 18,
     borderRadius: 16,

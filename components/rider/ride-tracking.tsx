@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet, Platform } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { useApp } from "@/lib/app-context";
 import type { ActiveRide } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 
@@ -13,6 +14,8 @@ interface Props {
 
 export default function RideTracking({ ride, onComplete }: Props) {
   const colors = useColors();
+  const { isFavoriteDriver } = useApp();
+  const isFaved = isFavoriteDriver(ride.driverId);
   const [eta, setEta] = useState(ride.eta);
   const [status, setStatus] = useState(ride.status);
 
@@ -123,11 +126,23 @@ export default function RideTracking({ ride, onComplete }: Props) {
 
         {/* Driver info */}
         <View style={[styles.driverCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={[styles.driverAvatar, { backgroundColor: colors.primary }]}>
-            <Text style={styles.driverInitial}>{ride.driverName[0]}</Text>
+          <View style={{ position: "relative" }}>
+            <View style={[styles.driverAvatar, { backgroundColor: colors.primary }]}>
+              <Text style={styles.driverInitial}>{ride.driverName[0]}</Text>
+            </View>
+            {isFaved && (
+              <View style={[styles.favBadge, { backgroundColor: colors.background }]}>
+                <IconSymbol name="heart.fill" size={12} color={colors.error} />
+              </View>
+            )}
           </View>
           <View style={styles.driverInfo}>
-            <Text style={[styles.driverName, { color: colors.foreground }]}>{ride.driverName}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text style={[styles.driverName, { color: colors.foreground }]}>{ride.driverName}</Text>
+              {isFaved && (
+                <Text style={{ fontSize: 12, fontWeight: "600", color: colors.error }}>Favorite</Text>
+              )}
+            </View>
             <View style={styles.driverMeta}>
               <IconSymbol name="star.fill" size={14} color={colors.warning} />
               <Text style={[styles.driverRating, { color: colors.muted }]}>
@@ -376,5 +391,20 @@ const styles = StyleSheet.create({
   fareValue: {
     fontSize: 18,
     fontWeight: "700",
+  },
+  favBadge: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });
