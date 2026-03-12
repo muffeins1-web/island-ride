@@ -67,3 +67,23 @@
 - [x] Build Onboarding welcome flow (3-step intro slides)
 - [x] Add proper empty states for all list screens
 - [x] Polish all screens for Uber-level consistency
+
+## Clickable Demo Flow Wiring
+- [x] Wire "Where to?" → destination search → ride options full flow
+- [x] Wire ride option confirm → searching animation → driver assigned transition
+- [x] Wire driver assigned → ride tracking → trip complete → rating → back to home
+- [x] Wire driver online toggle → incoming ride request popup with auto-timer
+- [x] Wire driver accept ride → navigate to pickup → start trip → trip complete → rating → back to home
+- [x] Wire role switch (rider ↔ driver) with proper screen transitions
+- [x] Wire Profile → Driver Verification dedicated screen with back navigation
+- [x] Wire Profile → Vehicle Details dedicated screen with back navigation
+- [x] Wire Profile → Payment Methods, Safety, Notifications, Help screens with back navigation
+- [x] Wire Activity tab: ride history items clickable, earnings dashboard interactive
+- [x] Ensure all "back" buttons and "close" buttons navigate correctly
+- [x] Add simulated auto-transitions (searching → found driver, driver arriving → arrived)
+- [x] Ensure no dead-end screens — every screen has a way back or forward
+- [x] Record completed rides to ride history (persisted via AsyncStorage)
+- [x] Merge state ride history with mock data in ride history view
+- [x] Wire favorite driver "Request This Driver" → full ride booking flow from Profile
+- [x] Wire ride history "Rebook" → full ride booking flow from Activity tab
+- [x] Use selected destination in ride creation for accurate dropoff info

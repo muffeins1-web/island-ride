@@ -54,17 +54,40 @@ export default function RiderHome() {
     setTimeout(() => {
       const ride = createMockActiveRide(true);
       ride.status = "driver_en_route";
+      // Use the selected destination if available
+      if (selectedDestination) {
+        ride.dropoff = selectedDestination.location;
+      }
       setActiveRide(ride);
       setView("tracking");
     }, 3000);
-  }, []);
+  }, [selectedDestination]);
 
   const handleCompleteRide = useCallback(() => {
     if (activeRide) {
-      setActiveRide({ ...activeRide, status: "completed" });
+      const completedRide = { ...activeRide, status: "completed" as const };
+      setActiveRide(completedRide);
+      // Record to ride history
+      dispatch({
+        type: "ADD_RIDE_HISTORY",
+        item: {
+          id: `ride-${Date.now()}`,
+          pickup: completedRide.pickup,
+          dropoff: completedRide.dropoff,
+          rideType: completedRide.rideType,
+          status: "completed",
+          fare: completedRide.fare,
+          distance: completedRide.estimatedDistance,
+          duration: completedRide.estimatedDuration,
+          driverName: completedRide.driverName,
+          driverRating: completedRide.driverRating,
+          riderRating: 5,
+          date: new Date().toISOString(),
+        },
+      });
       setView("complete");
     }
-  }, [activeRide]);
+  }, [activeRide, dispatch]);
 
   const handleDone = useCallback(() => {
     setView("home");

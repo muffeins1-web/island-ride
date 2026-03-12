@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   pageContainer: { flex: 1, paddingHorizontal: 24, paddingBottom: 32 },
   skipBtn: { alignSelf: "flex-end", paddingVertical: 12, paddingHorizontal: 4 },
   skipBtnText: { fontSize: 16, fontWeight: "500" },
-  iconArea: { flex: 1, alignItems: "center", justifyContent: "center", maxHeight: 280 },
+  iconArea: { alignItems: "center", justifyContent: "center", height: 220, marginTop: 20 },
   iconRingOuter: {
     width: 200,
     height: 200,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  textArea: { alignItems: "center", marginBottom: 32 },
+  textArea: { alignItems: "center", marginBottom: 32, marginTop: 24 },
   pageTitle: { fontSize: 28, fontWeight: "800", textAlign: "center", marginBottom: 12 },
   pageSubtitle: { fontSize: 16, textAlign: "center", lineHeight: 24 },
   dotsRow: { flexDirection: "row", alignSelf: "center", gap: 6, marginBottom: 32 },

@@ -5,12 +5,16 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
 import { ISLAND_LABELS } from "@/lib/types";
-import type { Island, FavoriteDriver } from "@/lib/types";
+import type { Island, FavoriteDriver, RideType, ActiveRide, PopularDestination } from "@/lib/types";
+import { POPULAR_DESTINATIONS, createMockActiveRide } from "@/lib/mock-data";
 import * as Haptics from "expo-haptics";
 
 import FavoriteDrivers from "@/components/rider/favorite-drivers";
 import DriverVerification from "@/components/driver/driver-verification";
 import VehicleDetails from "@/components/driver/vehicle-details";
+import RideOptions from "@/components/rider/ride-options";
+import RideTracking from "@/components/rider/ride-tracking";
+import RideComplete from "@/components/rider/ride-complete";
 
 type ProfileView =
   | "main"
@@ -23,7 +27,11 @@ type ProfileView =
   | "safety"
   | "help"
   | "driver_verification"
-  | "vehicle_details";
+  | "vehicle_details"
+  | "fav_ride_options"
+  | "fav_ride_matching"
+  | "fav_ride_tracking"
+  | "fav_ride_complete";
 
 const GOLD = "#D4A853";
 
@@ -32,6 +40,12 @@ export default function ProfileScreen() {
   const { state, dispatch, switchRole } = useApp();
   const [view, setView] = useState<ProfileView>("main");
   const [editName, setEditName] = useState(state.userName);
+
+  // Favorite driver ride flow state
+  const [favRideDest, setFavRideDest] = useState<PopularDestination | null>(null);
+  const [favRideType, setFavRideType] = useState<RideType>("standard");
+  const [favActiveRide, setFavActiveRide] = useState<ActiveRide | null>(null);
+  const [requestedDriverName, setRequestedDriverName] = useState("");
 
   const handleSaveName = useCallback(() => {
     if (editName.trim()) {
@@ -54,12 +68,126 @@ export default function ProfileScreen() {
     switchRole();
   }, [switchRole]);
 
+  // ── Favorite driver → ride flow ──
+  const handleRequestFavDriver = useCallback((driver: FavoriteDriver) => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setRequestedDriverName(driver.name);
+    // Pick a random destination for demo
+    const islandDests = POPULAR_DESTINATIONS.filter((d) => d.island === state.island);
+    const dest = islandDests[Math.floor(Math.random() * islandDests.length)] || POPULAR_DESTINATIONS[0];
+    setFavRideDest(dest);
+    setFavRideType("standard");
+    setView("fav_ride_options");
+  }, [state.island]);
+
+  const handleFavRideRequest = useCallback(() => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setView("fav_ride_matching");
+    setTimeout(() => {
+      const ride = createMockActiveRide(true);
+      ride.status = "driver_en_route";
+      ride.driverName = requestedDriverName || ride.driverName;
+      if (favRideDest) {
+        ride.dropoff = favRideDest.location;
+      }
+      setFavActiveRide(ride);
+      setView("fav_ride_tracking");
+    }, 3000);
+  }, [favRideDest, requestedDriverName]);
+
+  const handleFavRideComplete = useCallback(() => {
+    if (favActiveRide) {
+      const completedRide = { ...favActiveRide, status: "completed" as const };
+      setFavActiveRide(completedRide);
+      // Record to history
+      dispatch({
+        type: "ADD_RIDE_HISTORY",
+        item: {
+          id: `fav-${Date.now()}`,
+          pickup: completedRide.pickup,
+          dropoff: completedRide.dropoff,
+          rideType: completedRide.rideType,
+          status: "completed",
+          fare: completedRide.fare,
+          distance: completedRide.estimatedDistance,
+          duration: completedRide.estimatedDuration,
+          driverName: completedRide.driverName,
+          driverRating: completedRide.driverRating,
+          riderRating: 5,
+          date: new Date().toISOString(),
+        },
+      });
+      setView("fav_ride_complete");
+    }
+  }, [favActiveRide, dispatch]);
+
+  const handleFavRideDone = useCallback(() => {
+    setView("main");
+    setFavActiveRide(null);
+    setFavRideDest(null);
+    setRequestedDriverName("");
+  }, []);
+
+  // ── Favorite driver ride flow screens ──
+  if (view === "fav_ride_complete" && favActiveRide) {
+    return <RideComplete ride={favActiveRide} onDone={handleFavRideDone} />;
+  }
+
+  if (view === "fav_ride_tracking" && favActiveRide) {
+    return <RideTracking ride={favActiveRide} onComplete={handleFavRideComplete} />;
+  }
+
+  if (view === "fav_ride_matching") {
+    return (
+      <ScreenContainer>
+        <View style={[styles.matchingContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.ringOuter, { borderColor: colors.primary + "15" }]}>
+            <View style={[styles.ringMiddle, { borderColor: colors.primary + "30" }]}>
+              <View style={[styles.ringInner, { backgroundColor: colors.primary }]}>
+                <IconSymbol name="car.fill" size={36} color="#fff" />
+              </View>
+            </View>
+          </View>
+          <Text style={[styles.matchingTitle, { color: colors.foreground }]}>
+            Requesting {requestedDriverName}
+          </Text>
+          <Text style={[styles.matchingSubtitle, { color: colors.muted }]}>
+            Connecting with your favorite driver...
+          </Text>
+          <View style={styles.matchingDots}>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={[styles.matchingDot, { backgroundColor: colors.primary, opacity: 0.3 + i * 0.3 }]} />
+            ))}
+          </View>
+          <Pressable
+            onPress={handleFavRideDone}
+            style={({ pressed }) => [styles.cancelBtn, { borderColor: colors.border }, pressed && { opacity: 0.7 }]}
+          >
+            <Text style={[styles.cancelText, { color: colors.muted }]}>Cancel</Text>
+          </Pressable>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (view === "fav_ride_options" && favRideDest) {
+    return (
+      <RideOptions
+        destination={favRideDest}
+        selectedType={favRideType}
+        onSelectType={setFavRideType}
+        onRequest={handleFavRideRequest}
+        onBack={() => setView("favorite_drivers")}
+      />
+    );
+  }
+
   // ── Sub-screens ──
   if (view === "favorite_drivers") {
     return (
       <FavoriteDrivers
         onBack={() => setView("main")}
-        onRequestRide={(_driver: FavoriteDriver) => setView("main")}
+        onRequestRide={handleRequestFavDriver}
       />
     );
   }
@@ -262,7 +390,6 @@ export default function ProfileScreen() {
           <View style={{ width: 24 }} />
         </View>
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Emergency */}
           <Pressable
             style={({ pressed }) => [
               styles.emergencyBtn,
@@ -702,4 +829,46 @@ const styles = StyleSheet.create({
   aboutCard: { width: "100%", padding: 18, borderRadius: 16 },
   aboutCardTitle: { fontSize: 16, fontWeight: "700", marginBottom: 6 },
   aboutCardText: { fontSize: 14, lineHeight: 20 },
+  // Matching (for fav driver ride flow)
+  matchingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  ringOuter: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 36,
+  },
+  ringMiddle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringInner: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  matchingTitle: { fontSize: 24, fontWeight: "700", marginBottom: 8 },
+  matchingSubtitle: { fontSize: 15, textAlign: "center", marginBottom: 24 },
+  matchingDots: { flexDirection: "row", gap: 6, marginBottom: 32 },
+  matchingDot: { width: 8, height: 8, borderRadius: 4 },
+  cancelBtn: {
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: 1,
+  },
+  cancelText: { fontSize: 16, fontWeight: "500" },
 });
