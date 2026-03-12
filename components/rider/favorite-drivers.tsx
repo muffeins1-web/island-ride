@@ -8,6 +8,8 @@ import { ISLAND_LABELS } from "@/lib/types";
 import type { FavoriteDriver } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 
+const GOLD = "#D4A853";
+
 interface Props {
   onBack: () => void;
   onRequestRide: (driver: FavoriteDriver) => void;
@@ -25,11 +27,7 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
         `Remove ${driver.name} from your favorites?`,
         [
           { text: "Cancel", style: "cancel" },
-          {
-            text: "Remove",
-            style: "destructive",
-            onPress: () => removeFavoriteDriver(driver.id),
-          },
+          { text: "Remove", style: "destructive", onPress: () => removeFavoriteDriver(driver.id) },
         ]
       );
     },
@@ -57,7 +55,7 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
   };
 
   const renderDriver = ({ item }: { item: FavoriteDriver }) => (
-    <View style={[styles.driverCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <View style={[styles.driverCard, { backgroundColor: colors.surface }]}>
       <View style={styles.cardTop}>
         <View style={[styles.avatar, { backgroundColor: item.avatarColor }]}>
           <Text style={styles.avatarText}>{item.name[0]}</Text>
@@ -65,46 +63,53 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
         <View style={styles.driverInfo}>
           <View style={styles.nameRow}>
             <Text style={[styles.driverName, { color: colors.foreground }]}>{item.name}</Text>
-            <IconSymbol name="heart.fill" size={16} color={colors.error} />
+            <IconSymbol name="heart.fill" size={14} color={colors.error} />
           </View>
           <View style={styles.metaRow}>
-            <IconSymbol name="star.fill" size={14} color={colors.warning} />
+            <IconSymbol name="star.fill" size={12} color={colors.warning} />
             <Text style={[styles.rating, { color: colors.muted }]}>{item.rating.toFixed(1)}</Text>
-            <Text style={[styles.dot, { color: colors.muted }]}> · </Text>
-            <Text style={[styles.metaText, { color: colors.muted }]}>
-              {item.driverType === "taxi" ? "Taxi" : "Rideshare"}
-            </Text>
+            <Text style={[styles.dot, { color: colors.border }]}> · </Text>
+            <View style={[styles.typeBadge, { backgroundColor: item.driverType === "taxi" ? GOLD + "15" : colors.primary + "12" }]}>
+              <Text style={[styles.typeText, { color: item.driverType === "taxi" ? GOLD : colors.primary }]}>
+                {item.driverType === "taxi" ? "Taxi" : "Rideshare"}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
 
       {/* Vehicle info */}
       <View style={[styles.vehicleRow, { backgroundColor: colors.background }]}>
-        <IconSymbol name="car.fill" size={16} color={colors.primary} />
+        <IconSymbol name="car.fill" size={14} color={colors.primary} />
         <Text style={[styles.vehicleText, { color: colors.foreground }]}>
-          {item.vehicleInfo.color} {item.vehicleInfo.make} {item.vehicleInfo.model} · {item.vehicleInfo.plateNumber}
+          {item.vehicleInfo.color} {item.vehicleInfo.make} {item.vehicleInfo.model}
         </Text>
+        <Text style={[styles.plateText, { color: colors.primary }]}>{item.vehicleInfo.plateNumber}</Text>
       </View>
 
-      {/* Stats row */}
+      {/* Stats */}
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={[styles.statValue, { color: colors.foreground }]}>{item.totalRidesWithYou}</Text>
           <Text style={[styles.statLabel, { color: colors.muted }]}>
-            {item.totalRidesWithYou === 1 ? "ride" : "rides"} together
+            {item.totalRidesWithYou === 1 ? "ride" : "rides"}
           </Text>
         </View>
+        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
         <View style={styles.stat}>
           <Text style={[styles.statValue, { color: colors.foreground }]}>{formatDate(item.lastRideDate)}</Text>
           <Text style={[styles.statLabel, { color: colors.muted }]}>last ride</Text>
         </View>
+        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
         <View style={styles.stat}>
-          <Text style={[styles.statValue, { color: colors.foreground }]}>{ISLAND_LABELS[item.island].split("/")[0].trim()}</Text>
+          <Text style={[styles.statValue, { color: colors.foreground }]}>
+            {ISLAND_LABELS[item.island].split("/")[0].trim()}
+          </Text>
           <Text style={[styles.statLabel, { color: colors.muted }]}>island</Text>
         </View>
       </View>
 
-      {/* Action buttons */}
+      {/* Actions */}
       <View style={styles.actionRow}>
         <Pressable
           onPress={() => handleRequest(item)}
@@ -121,7 +126,7 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
           onPress={() => handleRemove(item)}
           style={({ pressed }) => [
             styles.removeBtn,
-            { borderColor: colors.border },
+            { backgroundColor: colors.error + "10" },
             pressed && { opacity: 0.7 },
           ]}
         >
@@ -141,10 +146,18 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Subtitle */}
       <Text style={[styles.subtitle, { color: colors.muted }]}>
         Drivers you love riding with. Request them directly for your next trip.
       </Text>
+
+      {state.favoriteDrivers.length > 0 && (
+        <View style={[styles.countBadge, { backgroundColor: colors.primary + "10" }]}>
+          <IconSymbol name="heart.fill" size={14} color={colors.primary} />
+          <Text style={[styles.countText, { color: colors.primary }]}>
+            {state.favoriteDrivers.length} favorite{state.favoriteDrivers.length !== 1 ? "s" : ""}
+          </Text>
+        </View>
+      )}
 
       <FlatList
         data={state.favoriteDrivers}
@@ -154,8 +167,8 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <View style={[styles.emptyCircle, { backgroundColor: colors.primary + "15" }]}>
-              <IconSymbol name="heart.fill" size={40} color={colors.primary} />
+            <View style={[styles.emptyCircle, { backgroundColor: colors.surface }]}>
+              <IconSymbol name="heart.fill" size={40} color={colors.muted} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No favorites yet</Text>
             <Text style={[styles.emptySubtitle, { color: colors.muted }]}>
@@ -169,135 +182,68 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
 }
 
 const styles = StyleSheet.create({
-  header: {
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12 },
+  title: { fontSize: 18, fontWeight: "700" },
+  subtitle: { fontSize: 14, lineHeight: 20, marginBottom: 12 },
+  countBadge: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  list: {
-    paddingBottom: 32,
-  },
-  driverCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
+    alignSelf: "flex-start",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
     marginBottom: 14,
   },
-  cardTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  driverInfo: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  driverName: {
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    marginTop: 3,
-  },
-  rating: {
-    fontSize: 13,
-  },
-  dot: {
-    fontSize: 13,
-  },
-  metaText: {
-    fontSize: 13,
-  },
+  countText: { fontSize: 13, fontWeight: "600" },
+  list: { paddingBottom: 32 },
+  driverCard: { borderRadius: 18, padding: 16, marginBottom: 12 },
+  cardTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
+  avatar: { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" },
+  avatarText: { color: "#fff", fontSize: 20, fontWeight: "700" },
+  driverInfo: { flex: 1 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  driverName: { fontSize: 17, fontWeight: "700" },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
+  rating: { fontSize: 13 },
+  dot: { fontSize: 13 },
+  typeBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  typeText: { fontSize: 11, fontWeight: "700" },
   vehicleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 12,
     marginBottom: 12,
   },
-  vehicleText: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  statsRow: {
-    flexDirection: "row",
-    marginBottom: 14,
-  },
-  stat: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  statLabel: {
-    fontSize: 11,
-    marginTop: 2,
-  },
-  actionRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
+  vehicleText: { flex: 1, fontSize: 13, fontWeight: "500" },
+  plateText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5 },
+  statsRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  stat: { flex: 1, alignItems: "center" },
+  statDivider: { width: 1, height: 24 },
+  statValue: { fontSize: 14, fontWeight: "700" },
+  statLabel: { fontSize: 11, marginTop: 2 },
+  actionRow: { flexDirection: "row", gap: 10 },
   requestBtn: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: 13,
+    borderRadius: 14,
   },
-  requestBtnText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "600",
-  },
+  requestBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
   removeBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
-  emptyState: {
-    alignItems: "center",
-    paddingTop: 60,
-    paddingHorizontal: 24,
-  },
+  emptyState: { alignItems: "center", paddingTop: 60, paddingHorizontal: 24 },
   emptyCircle: {
     width: 80,
     height: 80,
@@ -306,14 +252,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 16,
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    textAlign: "center",
-    lineHeight: 22,
-  },
+  emptyTitle: { fontSize: 20, fontWeight: "700", marginBottom: 8 },
+  emptySubtitle: { fontSize: 15, textAlign: "center", lineHeight: 22 },
 });

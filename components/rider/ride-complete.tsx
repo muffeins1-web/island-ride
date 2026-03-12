@@ -7,7 +7,8 @@ import { useApp } from "@/lib/app-context";
 import type { ActiveRide, FavoriteDriver } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 
-const AVATAR_COLORS = ["#0A9396", "#E9A820", "#005F73", "#EE6C4D", "#3D5A80", "#2A9D8F"];
+const AVATAR_COLORS = ["#0A9396", "#D4A853", "#005F73", "#EE6C4D", "#3D5A80", "#2A9D8F"];
+const GOLD = "#D4A853";
 
 interface Props {
   ride: ActiveRide;
@@ -21,7 +22,6 @@ export default function RideComplete({ ride, onDone }: Props) {
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
 
   const isFaved = isFavoriteDriver(ride.driverId);
-
   const tipOptions = [0, 2, 5, 10];
 
   const handleRate = useCallback((stars: number) => {
@@ -59,10 +59,10 @@ export default function RideComplete({ ride, onDone }: Props) {
   return (
     <ScreenContainer className="px-5 pt-4">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Success icon */}
+        {/* Success */}
         <View style={styles.successContainer}>
-          <View style={[styles.successCircle, { backgroundColor: colors.success + "20" }]}>
-            <IconSymbol name="checkmark" size={40} color={colors.success} />
+          <View style={[styles.successCircle, { backgroundColor: colors.success + "15" }]}>
+            <IconSymbol name="checkmark" size={44} color={colors.success} />
           </View>
           <Text style={[styles.successTitle, { color: colors.foreground }]}>Ride Complete!</Text>
           <Text style={[styles.successSubtitle, { color: colors.muted }]}>
@@ -70,8 +70,8 @@ export default function RideComplete({ ride, onDone }: Props) {
           </Text>
         </View>
 
-        {/* Driver card with favorite button */}
-        <View style={[styles.driverCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {/* Driver card with favorite */}
+        <View style={[styles.driverCard, { backgroundColor: colors.surface }]}>
           <View style={styles.driverRow}>
             <View style={[styles.driverAvatar, { backgroundColor: colors.primary }]}>
               <Text style={styles.driverInitial}>{ride.driverName[0]}</Text>
@@ -79,41 +79,40 @@ export default function RideComplete({ ride, onDone }: Props) {
             <View style={styles.driverInfo}>
               <Text style={[styles.driverName, { color: colors.foreground }]}>{ride.driverName}</Text>
               <View style={styles.driverMeta}>
-                <IconSymbol name="star.fill" size={14} color={colors.warning} />
+                <IconSymbol name="star.fill" size={13} color={colors.warning} />
                 <Text style={[styles.driverRating, { color: colors.muted }]}>
                   {ride.driverRating.toFixed(1)}
                 </Text>
                 <Text style={[styles.driverVehicle, { color: colors.muted }]}>
-                  {" · "}{ride.vehicleInfo.color} {ride.vehicleInfo.make} {ride.vehicleInfo.model}
+                  {" · "}{ride.vehicleInfo.color} {ride.vehicleInfo.make}
                 </Text>
               </View>
             </View>
-            {/* Favorite heart button */}
             <Pressable
               onPress={handleToggleFavorite}
               style={({ pressed }) => [
                 styles.favBtn,
-                {
-                  backgroundColor: isFaved ? colors.error + "15" : colors.surface,
-                  borderColor: isFaved ? colors.error + "40" : colors.border,
-                },
+                { backgroundColor: isFaved ? colors.error + "15" : colors.surface },
                 pressed && { transform: [{ scale: 0.9 }] },
               ]}
             >
               <IconSymbol
                 name={isFaved ? "heart.fill" : "heart"}
-                size={22}
+                size={24}
                 color={isFaved ? colors.error : colors.muted}
               />
             </Pressable>
           </View>
-          <Text style={[styles.favHint, { color: isFaved ? colors.error : colors.muted }]}>
-            {isFaved ? "Saved to favorites!" : "Tap the heart to save this driver"}
-          </Text>
+          {isFaved && (
+            <View style={[styles.favBadge, { backgroundColor: colors.error + "10" }]}>
+              <IconSymbol name="heart.fill" size={12} color={colors.error} />
+              <Text style={[styles.favBadgeText, { color: colors.error }]}>Saved to favorites</Text>
+            </View>
+          )}
         </View>
 
         {/* Fare breakdown */}
-        <View style={[styles.fareCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.fareCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.fareTitle, { color: colors.foreground }]}>Fare Summary</Text>
           <View style={styles.fareRow}>
             <Text style={[styles.fareLabel, { color: colors.muted }]}>Base fare</Text>
@@ -121,7 +120,7 @@ export default function RideComplete({ ride, onDone }: Props) {
           </View>
           <View style={styles.fareRow}>
             <Text style={[styles.fareLabel, { color: colors.muted }]}>Tip</Text>
-            <Text style={[styles.fareValue, { color: colors.foreground }]}>
+            <Text style={[styles.fareValue, { color: GOLD }]}>
               ${(selectedTip || 0).toFixed(2)}
             </Text>
           </View>
@@ -183,7 +182,7 @@ export default function RideComplete({ ride, onDone }: Props) {
           </View>
         </View>
 
-        {/* Done button */}
+        {/* Done */}
         <Pressable
           onPress={() => {
             if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -203,170 +202,78 @@ export default function RideComplete({ ride, onDone }: Props) {
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  successContainer: {
-    alignItems: "center",
-    paddingVertical: 24,
-  },
+  scrollContent: { paddingBottom: 32 },
+  successContainer: { alignItems: "center", paddingVertical: 20 },
   successCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
   },
-  successTitle: {
-    fontSize: 26,
-    fontWeight: "800",
-  },
-  successSubtitle: {
-    fontSize: 15,
-    marginTop: 6,
-    textAlign: "center",
-  },
-  // Driver card with favorite
-  driverCard: {
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 16,
-  },
-  driverRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
+  successTitle: { fontSize: 28, fontWeight: "800" },
+  successSubtitle: { fontSize: 15, marginTop: 6, textAlign: "center" },
+  driverCard: { padding: 16, borderRadius: 18, marginBottom: 16 },
+  driverRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   driverAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
   },
-  driverInitial: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  driverInfo: {
-    flex: 1,
-  },
-  driverName: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  driverMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    marginTop: 3,
-  },
-  driverRating: {
-    fontSize: 13,
-  },
-  driverVehicle: {
-    fontSize: 13,
-  },
+  driverInitial: { color: "#fff", fontSize: 20, fontWeight: "700" },
+  driverInfo: { flex: 1 },
+  driverName: { fontSize: 17, fontWeight: "700" },
+  driverMeta: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 3 },
+  driverRating: { fontSize: 13 },
+  driverVehicle: { fontSize: 13 },
   favBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1.5,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: "center",
     justifyContent: "center",
   },
-  favHint: {
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 10,
-    fontWeight: "500",
-  },
-  // Fare
-  fareCard: {
-    padding: 18,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 24,
-  },
-  fareTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 14,
-  },
-  fareRow: {
+  favBadge: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  fareLabel: {
-    fontSize: 15,
-  },
-  fareValue: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
+  favBadgeText: { fontSize: 12, fontWeight: "600" },
+  fareCard: { padding: 18, borderRadius: 18, marginBottom: 24 },
+  fareTitle: { fontSize: 16, fontWeight: "700", marginBottom: 14 },
+  fareRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  fareLabel: { fontSize: 15 },
+  fareValue: { fontSize: 15, fontWeight: "600" },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingTop: 12,
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
     marginTop: 4,
   },
-  totalLabel: {
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  totalValue: {
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  rateSection: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  rateTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  starsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  tipSection: {
-    marginBottom: 24,
-  },
-  tipTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  tipRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
+  totalLabel: { fontSize: 17, fontWeight: "700" },
+  totalValue: { fontSize: 22, fontWeight: "800" },
+  rateSection: { alignItems: "center", marginBottom: 24 },
+  rateTitle: { fontSize: 17, fontWeight: "600", marginBottom: 12 },
+  starsRow: { flexDirection: "row", gap: 8 },
+  tipSection: { marginBottom: 24 },
+  tipTitle: { fontSize: 17, fontWeight: "600", marginBottom: 12 },
+  tipRow: { flexDirection: "row", gap: 10 },
   tipBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1.5,
     alignItems: "center",
   },
-  tipBtnText: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  doneBtn: {
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-  doneBtnText: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "700",
-  },
+  tipBtnText: { fontSize: 15, fontWeight: "600" },
+  doneBtn: { paddingVertical: 16, borderRadius: 16, alignItems: "center" },
+  doneBtnText: { color: "#fff", fontSize: 17, fontWeight: "700" },
 });
