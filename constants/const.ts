@@ -1,5 +1,7 @@
-export const COOKIE_NAME = "app_session_id";
-export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
-export const AXIOS_TIMEOUT_MS = 30_000;
-export const UNAUTHED_ERR_MSG = "Please login (10001)";
-export const NOT_ADMIN_ERR_MSG = "You do not have required permission (10002)";
+/**
+ * DO NOT import from this file directly on the client or server.
+ * Client code → import from "@/shared/const" via the @shared/* path alias.
+ * This file exists only for legacy compatibility; it re-exports from the
+ * canonical shared/const.ts to avoid duplicated definitions.
+ */
+export { COOKIE_NAME, ONE_YEAR_MS, AXIOS_TIMEOUT_MS, UNAUTHED_ERR_MSG, NOT_ADMIN_ERR_MSG } from "@/shared/const";

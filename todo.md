@@ -134,3 +134,17 @@
 - [x] Integrate enhanced map into rider-home.tsx, ride-tracking.tsx, driver-home.tsx, driver-trip.tsx
 - [x] Integrate enhanced map into all trip screens
 - [x] Match existing dark premium UI style
+
+## GitHub Repo Sync
+- [x] Clone and compare repo with current project
+- [x] Apply cleaned-up use-auth.ts (removed debug console.logs)
+- [x] Apply cleaned-up lib/_core/api.ts (removed debug console.logs)
+- [x] Apply cleaned-up lib/_core/auth.ts (removed debug console.logs)
+- [x] Apply improved use-color-scheme.web.ts (delegates to ThemeProvider)
+- [x] Apply improved server CORS handling (explicit allowlist pattern)
+- [x] Update constants/const.ts to re-export from shared/const.ts
+- [x] Update oauth.ts comments from Chinese to English
+- [x] Enable auth.logout test (removed .skip)
+- [x] Add .env to .gitignore
+- [x] Fix auth.logout test mock (add hostname to req)
+- [x] All 59 tests passing

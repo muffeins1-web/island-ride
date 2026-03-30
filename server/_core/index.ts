@@ -30,10 +30,29 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // Enable CORS for all routes - reflect the request origin to support credentials
+  // CORS — allow specific origins (comma-separated in CORS_ORIGIN env var)
+  const allowedOrigins = new Set(
+    (process.env.CORS_ORIGIN || "")
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean),
+  );
+
   app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin) {
+    // Allow the origin if it's in the explicit allowlist, or derive it from
+    // known preview URL patterns so dev/staging environments work automatically.
+    const isAllowed =
+      origin &&
+      (allowedOrigins.has(origin) ||
+        origin.includes("localhost") ||
+        origin.includes("127.0.0.1") ||
+        // Manus preview subdomains share the same parent domain
+        (process.env.EXPO_WEB_PREVIEW_URL &&
+          new URL(process.env.EXPO_WEB_PREVIEW_URL).hostname.split(".").slice(-2).join(".") ===
+            new URL(origin).hostname.split(".").slice(-2).join(".")));
+
+    if (isAllowed) {
       res.header("Access-Control-Allow-Origin", origin);
     }
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -51,8 +70,8 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
   registerOAuthRoutes(app);
 
