@@ -9,13 +9,14 @@ import {
   StyleSheet,
   Platform,
   Animated,
+  Alert,
 } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
 import { POPULAR_DESTINATIONS, NEARBY_DRIVERS, createMockActiveRide } from "@/lib/mock-data";
-import { RIDE_TYPE_CONFIG, calculateFare } from "@/lib/types";
+import { ISLAND_LABELS, RIDE_TYPE_CONFIG, calculateFare } from "@/lib/types";
 import type { PopularDestination, RideType, ActiveRide } from "@/lib/types";
 import RideOptions from "./ride-options";
 import RideTracking from "./ride-tracking";
@@ -130,16 +131,18 @@ export default function RiderHome() {
   const [matchProgress, setMatchProgress] = useState(0);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // MVP: Nassau-only destinations
-  const nassauDestinations = POPULAR_DESTINATIONS.filter((d) => d.island === "nassau");
+  const currentIsland = state.island;
+  const islandDestinations = POPULAR_DESTINATIONS.filter((d) => d.island === currentIsland);
+  // When searching, also search across ALL islands for broader results
+  const allDestinations = POPULAR_DESTINATIONS;
   const filteredDestinations = searchText
-    ? nassauDestinations.filter(
+    ? allDestinations.filter(
         (d) =>
           d.name.toLowerCase().includes(searchText.toLowerCase()) ||
           d.address.toLowerCase().includes(searchText.toLowerCase()) ||
           (d.location.name && d.location.name.toLowerCase().includes(searchText.toLowerCase()))
       )
-    : nassauDestinations;
+    : islandDestinations;
 
   // Recent rides from history
   const recentDestinations = useMemo(() => {
@@ -434,9 +437,9 @@ export default function RiderHome() {
               </View>
             </Animated.View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.matchingTitle, { color: colors.foreground }]}>Finding your driver</Text>
+              <Text style={[styles.matchingTitle, { color: colors.foreground }]}>Connecting you with a driver</Text>
               <Text style={[styles.matchingSubtitle, { color: colors.muted }]}>
-                {matchProgress < 30 ? "Scanning nearby drivers..." : matchProgress < 60 ? "Found available drivers..." : matchProgress < 90 ? "Matching best driver..." : "Almost there..."}
+                {matchProgress < 30 ? "Checking drivers on island..." : matchProgress < 60 ? "Found available drivers..." : matchProgress < 90 ? "Selecting your best match..." : "Almost ready..."}
               </Text>
             </View>
           </View>
@@ -523,7 +526,7 @@ export default function RiderHome() {
             <View style={styles.routeInputRow}>
               <TextInput
                 style={[styles.searchInput, { color: colors.foreground }]}
-                placeholder="Enter destination..."
+                placeholder="Search places on island..."
                 placeholderTextColor={colors.muted}
                 value={searchText}
                 onChangeText={setSearchText}
@@ -552,7 +555,17 @@ export default function RiderHome() {
                 <Text style={[styles.savedChipText, { color: colors.foreground }]}>{sp.label}</Text>
               </Pressable>
             ))}
-            <Pressable style={({ pressed }) => [styles.savedChip, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && { opacity: 0.7 }]}>
+            <Pressable
+              onPress={() => {
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Alert.alert(
+                  "Save a Place",
+                  "Search for a destination first, then long-press it to save as a quick shortcut.",
+                  [{ text: "Got it" }]
+                );
+              }}
+              style={({ pressed }) => [styles.savedChip, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && { opacity: 0.7 }]}
+            >
               <IconSymbol name="plus" size={14} color={colors.muted} />
               <Text style={[styles.savedChipText, { color: colors.muted }]}>Add</Text>
             </Pressable>
@@ -567,7 +580,7 @@ export default function RiderHome() {
               <Pressable
                 key={i}
                 onPress={() => {
-                  const match = nassauDestinations.find((d: PopularDestination) => d.name === r.name || d.location.name === r.name);
+                  const match = islandDestinations.find((d: PopularDestination) => d.name === r.name || d.location.name === r.name);
                   if (match) handleSelectDestination(match);
                 }}
                 style={({ pressed }) => [
@@ -594,7 +607,7 @@ export default function RiderHome() {
           <View style={styles.suggestedSection}>
             <Text style={[styles.sectionLabel, { color: colors.muted }]}>Suggested for You</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {nassauDestinations.slice(0, 5).map((dest: PopularDestination) => {
+              {islandDestinations.slice(0, 5).map((dest: PopularDestination) => {
                 const dist = getDestDistance(dest);
                 return (
                   <Pressable
@@ -621,7 +634,7 @@ export default function RiderHome() {
         <Text style={[styles.sectionLabel, { color: colors.muted }]}>
           {searchText
             ? `${filteredDestinations.length} result${filteredDestinations.length !== 1 ? "s" : ""} for "${searchText}"`
-            : "Popular in Nassau"}
+            : "Popular on " + ISLAND_LABELS[currentIsland].split("/")[0].trim()}
         </Text>
 
         <FlatList
@@ -631,7 +644,7 @@ export default function RiderHome() {
           renderItem={({ item }) => {
             const dist = getDestDistance(item);
             const fare = calculateFare(dist.km, dist.mins, "standard");
-
+            const isOtherIsland = searchText && item.island !== currentIsland;
             return (
               <Pressable
                 onPress={() => handleSelectDestination(item)}
@@ -647,7 +660,7 @@ export default function RiderHome() {
                 <View style={styles.destInfo}>
                   <Text style={[styles.destName, { color: colors.foreground }]}>{item.name}</Text>
                   <Text style={[styles.destAddr, { color: colors.muted }]}>
-                    {item.address}
+                    {item.address}{isOtherIsland ? " · " + ISLAND_LABELS[item.island] : ""}
                   </Text>
                 </View>
                 <View style={styles.destMeta}>
@@ -680,7 +693,7 @@ export default function RiderHome() {
           <View style={[styles.islandChip, { backgroundColor: colors.background + "F0" }]}>
             <IconSymbol name="location.fill" size={13} color={colors.primary} />
             <Text style={[styles.islandChipText, { color: colors.foreground }]}>
-              Nassau / Paradise Island
+              {ISLAND_LABELS[currentIsland]}
             </Text>
           </View>
 
@@ -688,7 +701,7 @@ export default function RiderHome() {
           <View style={[styles.driverCountBadge, { backgroundColor: colors.background + "F0" }]}>
             <View style={[styles.driverCountDot, { backgroundColor: colors.success }]} />
             <Text style={[styles.driverCountText, { color: colors.foreground }]}>
-              {driverCount} drivers nearby
+              {driverCount} drivers on island
             </Text>
           </View>
         </IslandMap>
@@ -717,16 +730,31 @@ export default function RiderHome() {
           <View style={[styles.whereToIcon, { backgroundColor: colors.primary + "18" }]}>
             <IconSymbol name="magnifyingglass" size={18} color={colors.primary} />
           </View>
-          <Text style={[styles.whereToText, { color: colors.muted }]}>Where to?</Text>
-          <View style={[styles.scheduleBadge, { backgroundColor: colors.primary + "12" }]}>
+          <Text style={[styles.whereToText, { color: colors.muted }]}>Where you headed?</Text>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              Alert.alert(
+                "Ride Scheduling",
+                "Advance ride scheduling is coming soon. For now, all rides are requested on demand.",
+                [{ text: "OK" }]
+              );
+            }}
+            style={({ pressed }) => [
+              styles.scheduleBadge,
+              { backgroundColor: colors.primary + "12" },
+              pressed && { opacity: 0.7 },
+            ]}
+          >
             <IconSymbol name="clock.fill" size={14} color={colors.primary} />
             <Text style={[styles.scheduleText, { color: colors.primary }]}>Now</Text>
-          </View>
+          </Pressable>
         </Pressable>
 
         {/* Quick destinations */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickDests}>
-          {nassauDestinations.slice(0, 4).map((dest: PopularDestination) => {
+          {islandDestinations.slice(0, 4).map((dest: PopularDestination) => {
             const dist = getDestDistance(dest);
             return (
               <Pressable

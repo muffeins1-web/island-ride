@@ -187,20 +187,20 @@ export const RIDE_TYPE_CONFIG: Record<
   { label: string; description: string; icon: string; multiplier: number }
 > = {
   standard: {
-    label: "Island Standard",
-    description: "Affordable everyday rides",
+    label: "Island Ride",
+    description: "Reliable local transport",
     icon: "car.fill",
     multiplier: 1.0,
   },
   premium: {
-    label: "Island Premium",
-    description: "Luxury comfort rides",
+    label: "Island Select",
+    description: "Premium comfort, top-rated drivers",
     icon: "star.fill",
     multiplier: 1.8,
   },
   shared: {
     label: "Island Share",
-    description: "Split the fare, share the ride",
+    description: "Share the route, split the cost",
     icon: "person.fill",
     multiplier: 0.65,
   },

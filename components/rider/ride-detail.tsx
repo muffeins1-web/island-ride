@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, StyleSheet, Platform } from "react-native";
+import { View, Text, Pressable, StyleSheet, Platform, ScrollView, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
@@ -38,7 +38,7 @@ export default function RideDetail({ ride, onBack, onRebook }: Props) {
         <Pressable onPress={onBack} style={({ pressed }) => [pressed && { opacity: 0.6 }]}>
           <IconSymbol name="arrow.left" size={24} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Ride Details</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Trip Details</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -199,10 +199,23 @@ export default function RideDetail({ ride, onBack, onRebook }: Props) {
           ]}
         >
           <IconSymbol name="arrow.counterclockwise" size={18} color="#fff" />
-          <Text style={styles.rebookBtnText}>Rebook This Ride</Text>
+          <Text style={styles.rebookBtnText}>Book This Trip Again</Text>
         </Pressable>
 
         <Pressable
+          onPress={() => {
+            if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            Alert.alert(
+              "Report an Issue",
+              "What would you like to report about this ride?",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Fare dispute", onPress: () => Alert.alert("Reported", "We'll review the fare for this ride and follow up within 24 hours.") },
+                { text: "Safety concern", onPress: () => Alert.alert("Reported", "Our safety team will review this and contact you shortly.") },
+                { text: "Other issue", onPress: () => Alert.alert("Reported", "Your report has been submitted. Our support team will follow up.") },
+              ]
+            );
+          }}
           style={({ pressed }) => [
             styles.reportBtn,
             { borderColor: colors.border },

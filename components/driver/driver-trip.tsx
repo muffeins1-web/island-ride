@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, Pressable, StyleSheet, Platform, ScrollView, Animated as RNAnimated } from "react-native";
+import { View, Text, Pressable, StyleSheet, Platform, ScrollView, Animated as RNAnimated, Alert, Linking } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
@@ -343,10 +343,36 @@ export default function DriverTrip({ trip, onComplete }: Props) {
               </Text>
             </View>
           </View>
-          <Pressable style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.primary + "12" }, pressed && { opacity: 0.7 }]}>
+          <Pressable
+            onPress={() => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              Alert.alert(
+                "Call Rider",
+                `Contact ${trip.riderName} by phone?`,
+                [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Call", onPress: () => Linking.openURL("tel:+12425550123") },
+                ]
+              );
+            }}
+            style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.primary + "12" }, pressed && { opacity: 0.7 }]}
+          >
             <IconSymbol name="phone.fill" size={18} color={colors.primary} />
           </Pressable>
-          <Pressable style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.primary + "12" }, pressed && { opacity: 0.7 }]}>
+          <Pressable
+            onPress={() => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              Alert.alert(
+                "Message Rider",
+                `Send a message to ${trip.riderName}?`,
+                [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Send SMS", onPress: () => Linking.openURL(`sms:+12425550123&body=Hi ${trip.riderName}, I'm on my way!`) },
+                ]
+              );
+            }}
+            style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.primary + "12" }, pressed && { opacity: 0.7 }]}
+          >
             <IconSymbol name="message.fill" size={18} color={colors.primary} />
           </Pressable>
         </View>
@@ -395,7 +421,7 @@ export default function DriverTrip({ trip, onComplete }: Props) {
           <View style={[styles.enRouteBar, { backgroundColor: colors.primary + "10" }]}>
             <IconSymbol name="car.fill" size={18} color={colors.primary} />
             <Text style={[styles.enRouteText, { color: colors.foreground }]}>
-              Navigating to pickup — {pickupEta} min away
+              Heading to pickup — {pickupEta} min away
             </Text>
           </View>
         )}
@@ -404,7 +430,7 @@ export default function DriverTrip({ trip, onComplete }: Props) {
           <View style={[styles.arrivingBar, { backgroundColor: colors.warning + "15" }]}>
             <IconSymbol name="bell.fill" size={18} color={colors.warning} />
             <Text style={[styles.arrivingBarText, { color: colors.foreground }]}>
-              Arriving at pickup location...
+              Almost at the pickup spot...
             </Text>
           </View>
         )}
@@ -413,7 +439,7 @@ export default function DriverTrip({ trip, onComplete }: Props) {
           <View>
             <View style={[styles.waitingCard, { backgroundColor: colors.surface }]}>
               <IconSymbol name="person.fill" size={20} color={colors.primary} />
-              <Text style={[styles.waitingText, { color: colors.foreground }]}>Waiting for rider...</Text>
+              <Text style={[styles.waitingText, { color: colors.foreground }]}>Waiting for your passenger...</Text>
             </View>
             <Pressable
               onPress={handleConfirmPickup}
@@ -433,7 +459,7 @@ export default function DriverTrip({ trip, onComplete }: Props) {
           <View>
             <View style={[styles.confirmedCard, { backgroundColor: colors.success + "12" }]}>
               <IconSymbol name="checkmark" size={16} color={colors.success} />
-              <Text style={[styles.confirmedText, { color: colors.success }]}>Rider confirmed in vehicle</Text>
+              <Text style={[styles.confirmedText, { color: colors.success }]}>Passenger confirmed aboard</Text>
             </View>
             <Pressable
               onPress={handleStartTrip}
@@ -459,7 +485,7 @@ export default function DriverTrip({ trip, onComplete }: Props) {
             ]}
           >
             <IconSymbol name="flag.fill" size={18} color="#fff" />
-            <Text style={styles.actionBtnText}>Complete Trip — Drop Off</Text>
+            <Text style={styles.actionBtnText}>Complete — Drop Off</Text>
           </Pressable>
         )}
       </View>

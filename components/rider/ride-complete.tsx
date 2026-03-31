@@ -5,7 +5,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
 import { RIDE_TYPE_CONFIG, BASE_FARE, PER_KM_RATE, PER_MIN_RATE, BOOKING_FEE } from "@/lib/types";
-import type { ActiveRide } from "@/lib/types";
+import type { ActiveRide, FavoriteDriver } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 
 const AVATAR_COLORS = ["#0A9396", "#D4A853", "#005F73", "#EE6C4D", "#3D5A80", "#2A9D8F"];
@@ -18,12 +18,12 @@ interface Props {
 
 export default function RideComplete({ ride, onDone }: Props) {
   const colors = useColors();
-  const { state } = useApp();
+  const { isFavoriteDriver, addFavoriteDriver, removeFavoriteDriver, state } = useApp();
   const [rating, setRating] = useState(0);
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
 
-
+  const isFaved = isFavoriteDriver(ride.driverId);
   const isPremium = ride.rideType === "premium";
   const config = RIDE_TYPE_CONFIG[ride.rideType];
   const tipOptions = [0, 2, 5, 10];
@@ -41,7 +41,25 @@ export default function RideComplete({ ride, onDone }: Props) {
     setSelectedTip(amount === selectedTip ? null : amount);
   }, [selectedTip]);
 
-
+  const handleToggleFavorite = useCallback(() => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (isFaved) {
+      removeFavoriteDriver(ride.driverId);
+    } else {
+      const driver: FavoriteDriver = {
+        id: ride.driverId,
+        name: ride.driverName,
+        rating: ride.driverRating,
+        vehicleInfo: ride.vehicleInfo,
+        driverType: "rideshare",
+        totalRidesWithYou: 1,
+        lastRideDate: new Date().toISOString(),
+        island: state.island,
+        avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+      };
+      addFavoriteDriver(driver);
+    }
+  }, [isFaved, ride, state.island, addFavoriteDriver, removeFavoriteDriver]);
 
   return (
     <ScreenContainer className="px-5 pt-4">
@@ -51,9 +69,9 @@ export default function RideComplete({ ride, onDone }: Props) {
           <View style={[styles.successCircle, { backgroundColor: colors.success + "15" }]}>
             <IconSymbol name="checkmark" size={44} color={colors.success} />
           </View>
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>Ride Complete!</Text>
+          <Text style={[styles.successTitle, { color: colors.foreground }]}>You've Arrived</Text>
           <Text style={[styles.successSubtitle, { color: colors.muted }]}>
-            You arrived at {ride.dropoff.name || "your destination"}
+            Welcome to {ride.dropoff.name || "your destination"}
           </Text>
         </View>
 
@@ -114,9 +132,27 @@ export default function RideComplete({ ride, onDone }: Props) {
               </View>
               <Text style={[styles.driverPlateText, { color: colors.primary }]}>{ride.vehicleInfo.plateNumber}</Text>
             </View>
-
+            <Pressable
+              onPress={handleToggleFavorite}
+              style={({ pressed }) => [
+                styles.favBtn,
+                { backgroundColor: isFaved ? colors.error + "15" : colors.surface },
+                pressed && { transform: [{ scale: 0.9 }] },
+              ]}
+            >
+              <IconSymbol
+                name={isFaved ? "heart.fill" : "heart"}
+                size={24}
+                color={isFaved ? colors.error : colors.muted}
+              />
+            </Pressable>
           </View>
-
+          {isFaved && (
+            <View style={[styles.favNotice, { backgroundColor: colors.error + "10" }]}>
+              <IconSymbol name="heart.fill" size={12} color={colors.error} />
+              <Text style={[styles.favNoticeText, { color: colors.error }]}>Saved to favorites</Text>
+            </View>
+          )}
         </View>
 
         {/* Fare summary */}

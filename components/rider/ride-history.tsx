@@ -168,9 +168,9 @@ export default function RideHistory({ onRebook }: Props) {
             <View style={[styles.emptyIcon, { backgroundColor: colors.surface }]}>
               <IconSymbol name="car.fill" size={40} color={colors.muted} />
             </View>
-            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No rides yet</Text>
+            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No trips yet</Text>
             <Text style={[styles.emptySubtitle, { color: colors.muted }]}>
-              Your ride history will appear here after your first trip
+              Your trip history will show up here once you take your first ride
             </Text>
           </View>
         }

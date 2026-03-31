@@ -46,11 +46,11 @@ export default function DriverHome() {
   useEffect(() => {
     if (isOnline && !incomingRequest && !activeTrip) {
       const texts = [
-        "Looking for riders nearby...",
-        "Scanning Bay Street area...",
-        "Checking Paradise Island...",
-        "Searching Cable Beach zone...",
-        "Monitoring downtown requests...",
+        "Checking for riders on island...",
+        "Watching Bay Street area...",
+        "Keeping an eye on Paradise Island...",
+        "Covering Cable Beach zone...",
+        "Listening for downtown bookings...",
       ];
       let idx = 0;
       const interval = setInterval(() => {
@@ -238,12 +238,12 @@ export default function DriverHome() {
           ]}
         >
           <IconSymbol name="power" size={22} color="#fff" />
-          <Text style={styles.toggleBtnText}>{isOnline ? "Go Offline" : "Go Online"}</Text>
+          <Text style={styles.toggleBtnText}>{isOnline ? "Go Offline" : "Start Driving"}</Text>
         </Pressable>
 
         {!isOnline && (
           <Text style={[styles.offlineHint, { color: colors.muted }]}>
-            Go online to start receiving ride requests
+            Tap to start driving and receive bookings on your island
           </Text>
         )}
       </View>
@@ -260,7 +260,7 @@ export default function DriverHome() {
             {/* Header: title + timer circle */}
             <View style={styles.requestHeader}>
               <View>
-                <Text style={[styles.requestTitle, { color: colors.foreground }]}>New Ride Request</Text>
+                <Text style={[styles.requestTitle, { color: colors.foreground }]}>New Booking</Text>
                 <Text style={[styles.requestType, { color: RIDE_TYPE_CONFIG[incomingRequest.rideType].label.includes("Premium") ? GOLD : colors.primary }]}>
                   {RIDE_TYPE_CONFIG[incomingRequest.rideType].label}
                 </Text>
@@ -353,7 +353,7 @@ export default function DriverHome() {
                 style={({ pressed }) => [styles.acceptBtn, { backgroundColor: colors.success }, pressed && { transform: [{ scale: 0.97 }] }]}
               >
                 <IconSymbol name="checkmark" size={18} color="#fff" />
-                <Text style={styles.acceptBtnText}>Accept Ride</Text>
+                <Text style={styles.acceptBtnText}>Accept</Text>
               </Pressable>
             </View>
           </View>

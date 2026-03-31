@@ -24,7 +24,7 @@ export default function EarningsDashboard() {
 
   return (
     <ScreenContainer className="px-5 pt-2">
-      <Text style={[styles.title, { color: colors.foreground }]}>Earnings</Text>
+      <Text style={[styles.title, { color: colors.foreground }]}>Your Earnings</Text>
 
       {/* Period selector */}
       <View style={[styles.periodRow, { backgroundColor: colors.surface }]}>

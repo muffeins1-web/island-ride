@@ -16,6 +16,8 @@ export default function TabLayout() {
   const tabBarHeight = 60 + bottomPadding;
   const [showOnboarding, setShowOnboarding] = useState(!state.hasOnboarded);
 
+  const isDriver = state.role === "driver";
+
   if (showOnboarding) {
     return <Onboarding onComplete={() => setShowOnboarding(false)} />;
   }
@@ -52,16 +54,20 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="house.fill" color={color} />
+            <IconSymbol size={26} name={isDriver ? "car.fill" : "house.fill"} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="activity"
         options={{
-          title: "Activity",
+          title: isDriver ? "Earnings" : "Activity",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="clock.fill" color={color} />
+            <IconSymbol
+              size={26}
+              name={isDriver ? "chart.bar.fill" : "clock.fill"}
+              color={color}
+            />
           ),
         }}
       />

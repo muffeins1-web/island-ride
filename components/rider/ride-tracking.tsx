@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, Pressable, StyleSheet, Platform, Animated } from "react-native";
+import { View, Text, Pressable, StyleSheet, Platform, Animated, Alert, Linking } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { useApp } from "@/lib/app-context";
 import { RIDE_TYPE_CONFIG } from "@/lib/types";
 import type { ActiveRide, RideStatus } from "@/lib/types";
 import IslandMap from "@/components/ui/island-map";
@@ -18,12 +19,14 @@ const GOLD = "#D4A853";
 
 export default function RideTracking({ ride, onComplete }: Props) {
   const colors = useColors();
+  const { isFavoriteDriver } = useApp();
   const [status, setStatus] = useState<RideStatus>(ride.status);
   const [eta, setEta] = useState(ride.eta);
   const [elapsed, setElapsed] = useState(0);
   const [liveFare, setLiveFare] = useState(ride.fare);
   const progressAnim = useRef(new Animated.Value(0)).current;
 
+  const isFav = isFavoriteDriver(ride.driverId);
   const isPremium = ride.rideType === "premium";
 
   // ETA countdown
@@ -79,20 +82,20 @@ export default function RideTracking({ ride, onComplete }: Props) {
 
   const statusConfig: Record<string, { title: string; subtitle: string; color: string; icon: string }> = {
     driver_en_route: {
-      title: "Driver is on the way",
-      subtitle: `Arriving in ${eta} min`,
+      title: "Your driver is heading over",
+      subtitle: `About ${eta} min away`,
       color: colors.primary,
       icon: "car.fill",
     },
     arrived: {
-      title: "Driver has arrived",
-      subtitle: "Meet at the pickup point",
+      title: "Your driver is here",
+      subtitle: "Head to the pickup spot",
       color: colors.success,
       icon: "checkmark",
     },
     in_progress: {
-      title: "Trip in progress",
-      subtitle: `${Math.max(0, eta - elapsed)} min remaining`,
+      title: "On your way",
+      subtitle: `${Math.max(0, eta - elapsed)} min to go`,
       color: colors.primary,
       icon: "location.fill",
     },
@@ -185,7 +188,12 @@ export default function RideTracking({ ride, onComplete }: Props) {
             <View style={styles.driverInfo}>
               <View style={styles.driverNameRow}>
                 <Text style={[styles.driverName, { color: colors.foreground }]}>{ride.driverName}</Text>
-
+                {isFav && (
+                  <View style={[styles.favBadge, { backgroundColor: colors.error + "15" }]}>
+                    <IconSymbol name="heart.fill" size={10} color={colors.error} />
+                    <Text style={[styles.favBadgeText, { color: colors.error }]}>Favorite</Text>
+                  </View>
+                )}
               </View>
               <View style={styles.driverMeta}>
                 <IconSymbol name="star.fill" size={13} color={colors.warning} />
@@ -200,15 +208,55 @@ export default function RideTracking({ ride, onComplete }: Props) {
           </View>
 
           <View style={[styles.contactRow, { borderTopColor: colors.border }]}>
-            <Pressable style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.primary + "12" }, pressed && { opacity: 0.7 }]}>
+            <Pressable
+              onPress={() => {
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Alert.alert(
+                  "Call Driver",
+                  `Contact ${ride.driverName} by phone?`,
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Call", onPress: () => Linking.openURL("tel:+12425550199") },
+                  ]
+                );
+              }}
+              style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.primary + "12" }, pressed && { opacity: 0.7 }]}
+            >
               <IconSymbol name="phone.fill" size={18} color={colors.primary} />
               <Text style={[styles.contactBtnText, { color: colors.primary }]}>Call</Text>
             </Pressable>
-            <Pressable style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.primary + "12" }, pressed && { opacity: 0.7 }]}>
+            <Pressable
+              onPress={() => {
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Alert.alert(
+                  "Message Driver",
+                  `Send a message to ${ride.driverName}?`,
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Send SMS", onPress: () => Linking.openURL(`sms:+12425550199&body=Hi ${ride.driverName}, I'm at the pickup location.`) },
+                  ]
+                );
+              }}
+              style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.primary + "12" }, pressed && { opacity: 0.7 }]}
+            >
               <IconSymbol name="message.fill" size={18} color={colors.primary} />
               <Text style={[styles.contactBtnText, { color: colors.primary }]}>Message</Text>
             </Pressable>
-            <Pressable style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.error + "12" }, pressed && { opacity: 0.7 }]}>
+            <Pressable
+              onPress={() => {
+                if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                Alert.alert(
+                  "Safety Options",
+                  "Choose an action:",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Share Trip Status", onPress: () => Alert.alert("Trip Shared", "Your trip details have been shared with your trusted contacts.") },
+                    { text: "Call 919 Emergency", style: "destructive", onPress: () => Linking.openURL("tel:919") },
+                  ]
+                );
+              }}
+              style={({ pressed }) => [styles.contactBtn, { backgroundColor: colors.error + "12" }, pressed && { opacity: 0.7 }]}
+            >
               <IconSymbol name="shield.fill" size={18} color={colors.error} />
               <Text style={[styles.contactBtnText, { color: colors.error }]}>Safety</Text>
             </Pressable>

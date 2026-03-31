@@ -120,7 +120,7 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
           ]}
         >
           <IconSymbol name="car.fill" size={16} color="#fff" />
-          <Text style={styles.requestBtnText}>Request This Driver</Text>
+          <Text style={styles.requestBtnText}>Book This Driver</Text>
         </Pressable>
         <Pressable
           onPress={() => handleRemove(item)}
@@ -142,12 +142,12 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
         <Pressable onPress={onBack} style={({ pressed }) => [pressed && { opacity: 0.6 }]}>
           <IconSymbol name="arrow.left" size={24} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.title, { color: colors.foreground }]}>Favorite Drivers</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>Your Preferred Drivers</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <Text style={[styles.subtitle, { color: colors.muted }]}>
-        Drivers you love riding with. Request them directly for your next trip.
+        Drivers you trust. Book them directly for your next trip.
       </Text>
 
       {state.favoriteDrivers.length > 0 && (
@@ -172,7 +172,7 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
             </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No favorites yet</Text>
             <Text style={[styles.emptySubtitle, { color: colors.muted }]}>
-              After completing a ride, tap the heart icon to save your favorite drivers for easy re-booking.
+              After a trip, tap the heart icon to save drivers you'd like to ride with again.
             </Text>
           </View>
         }

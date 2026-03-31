@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet, Platform, TextInput } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, Platform, TextInput, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
@@ -111,6 +111,14 @@ export default function DriverVerification({ onBack }: Props) {
 
           <Text style={[styles.fieldLabel, { color: colors.muted }]}>LICENSE PHOTO</Text>
           <Pressable
+            onPress={() => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              Alert.alert(
+                "Upload License Photo",
+                "Camera and gallery access will be available in the full release. For now, enter your license number below to continue.",
+                [{ text: "OK" }]
+              );
+            }}
             style={({ pressed }) => [
               styles.uploadBox,
               { backgroundColor: colors.surface, borderColor: colors.border },

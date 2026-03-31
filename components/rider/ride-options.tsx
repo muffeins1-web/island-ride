@@ -38,7 +38,7 @@ export default function RideOptions({ destination, selectedType, onSelectType, o
   const [showFareBreakdown, setShowFareBreakdown] = useState(false);
 
   const dist = DEST_DISTANCES[destination.id] || { km: 5 + Math.random() * 8, mins: 10 + Math.round(Math.random() * 12) };
-  const rideTypes: RideType[] = ["standard", "premium"];
+  const rideTypes: RideType[] = ["standard", "premium", "shared"];
 
   const handleCyclePayment = useCallback(() => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -55,7 +55,7 @@ export default function RideOptions({ destination, selectedType, onSelectType, o
         <Pressable onPress={onBack} style={({ pressed }) => [pressed && { opacity: 0.6 }]}>
           <IconSymbol name="arrow.left" size={24} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Choose a ride</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Your Ride Options</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -248,7 +248,7 @@ export default function RideOptions({ destination, selectedType, onSelectType, o
         ]}
       >
         <Text style={styles.requestBtnText}>
-          Request {RIDE_TYPE_CONFIG[selectedType].label}
+          Book {RIDE_TYPE_CONFIG[selectedType].label}
         </Text>
         <View style={styles.requestBtnDivider} />
         <Text style={styles.requestBtnFare}>
