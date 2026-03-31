@@ -38,7 +38,7 @@ export default function RideOptions({ destination, selectedType, onSelectType, o
   const [showFareBreakdown, setShowFareBreakdown] = useState(false);
 
   const dist = DEST_DISTANCES[destination.id] || { km: 5 + Math.random() * 8, mins: 10 + Math.round(Math.random() * 12) };
-  const rideTypes: RideType[] = ["standard", "premium", "shared"];
+  const rideTypes: RideType[] = ["standard", "premium"];
 
   const handleCyclePayment = useCallback(() => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

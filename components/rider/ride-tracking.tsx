@@ -3,7 +3,6 @@ import { View, Text, Pressable, StyleSheet, Platform, Animated } from "react-nat
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
-import { useApp } from "@/lib/app-context";
 import { RIDE_TYPE_CONFIG } from "@/lib/types";
 import type { ActiveRide, RideStatus } from "@/lib/types";
 import IslandMap from "@/components/ui/island-map";
@@ -19,14 +18,12 @@ const GOLD = "#D4A853";
 
 export default function RideTracking({ ride, onComplete }: Props) {
   const colors = useColors();
-  const { isFavoriteDriver } = useApp();
   const [status, setStatus] = useState<RideStatus>(ride.status);
   const [eta, setEta] = useState(ride.eta);
   const [elapsed, setElapsed] = useState(0);
   const [liveFare, setLiveFare] = useState(ride.fare);
   const progressAnim = useRef(new Animated.Value(0)).current;
 
-  const isFav = isFavoriteDriver(ride.driverId);
   const isPremium = ride.rideType === "premium";
 
   // ETA countdown
@@ -188,12 +185,7 @@ export default function RideTracking({ ride, onComplete }: Props) {
             <View style={styles.driverInfo}>
               <View style={styles.driverNameRow}>
                 <Text style={[styles.driverName, { color: colors.foreground }]}>{ride.driverName}</Text>
-                {isFav && (
-                  <View style={[styles.favBadge, { backgroundColor: colors.error + "15" }]}>
-                    <IconSymbol name="heart.fill" size={10} color={colors.error} />
-                    <Text style={[styles.favBadgeText, { color: colors.error }]}>Favorite</Text>
-                  </View>
-                )}
+
               </View>
               <View style={styles.driverMeta}>
                 <IconSymbol name="star.fill" size={13} color={colors.warning} />

@@ -15,7 +15,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
 import { POPULAR_DESTINATIONS, NEARBY_DRIVERS, createMockActiveRide } from "@/lib/mock-data";
-import { ISLAND_LABELS, RIDE_TYPE_CONFIG, calculateFare } from "@/lib/types";
+import { RIDE_TYPE_CONFIG, calculateFare } from "@/lib/types";
 import type { PopularDestination, RideType, ActiveRide } from "@/lib/types";
 import RideOptions from "./ride-options";
 import RideTracking from "./ride-tracking";
@@ -130,18 +130,16 @@ export default function RiderHome() {
   const [matchProgress, setMatchProgress] = useState(0);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  const currentIsland = state.island;
-  const islandDestinations = POPULAR_DESTINATIONS.filter((d) => d.island === currentIsland);
-  // When searching, also search across ALL islands for broader results
-  const allDestinations = POPULAR_DESTINATIONS;
+  // MVP: Nassau-only destinations
+  const nassauDestinations = POPULAR_DESTINATIONS.filter((d) => d.island === "nassau");
   const filteredDestinations = searchText
-    ? allDestinations.filter(
+    ? nassauDestinations.filter(
         (d) =>
           d.name.toLowerCase().includes(searchText.toLowerCase()) ||
           d.address.toLowerCase().includes(searchText.toLowerCase()) ||
           (d.location.name && d.location.name.toLowerCase().includes(searchText.toLowerCase()))
       )
-    : islandDestinations;
+    : nassauDestinations;
 
   // Recent rides from history
   const recentDestinations = useMemo(() => {
@@ -569,7 +567,7 @@ export default function RiderHome() {
               <Pressable
                 key={i}
                 onPress={() => {
-                  const match = islandDestinations.find((d: PopularDestination) => d.name === r.name || d.location.name === r.name);
+                  const match = nassauDestinations.find((d: PopularDestination) => d.name === r.name || d.location.name === r.name);
                   if (match) handleSelectDestination(match);
                 }}
                 style={({ pressed }) => [
@@ -596,7 +594,7 @@ export default function RiderHome() {
           <View style={styles.suggestedSection}>
             <Text style={[styles.sectionLabel, { color: colors.muted }]}>Suggested for You</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {islandDestinations.slice(0, 5).map((dest: PopularDestination) => {
+              {nassauDestinations.slice(0, 5).map((dest: PopularDestination) => {
                 const dist = getDestDistance(dest);
                 return (
                   <Pressable
@@ -623,7 +621,7 @@ export default function RiderHome() {
         <Text style={[styles.sectionLabel, { color: colors.muted }]}>
           {searchText
             ? `${filteredDestinations.length} result${filteredDestinations.length !== 1 ? "s" : ""} for "${searchText}"`
-            : "Popular on " + ISLAND_LABELS[currentIsland].split("/")[0].trim()}
+            : "Popular in Nassau"}
         </Text>
 
         <FlatList
@@ -633,7 +631,7 @@ export default function RiderHome() {
           renderItem={({ item }) => {
             const dist = getDestDistance(item);
             const fare = calculateFare(dist.km, dist.mins, "standard");
-            const isOtherIsland = searchText && item.island !== currentIsland;
+
             return (
               <Pressable
                 onPress={() => handleSelectDestination(item)}
@@ -649,7 +647,7 @@ export default function RiderHome() {
                 <View style={styles.destInfo}>
                   <Text style={[styles.destName, { color: colors.foreground }]}>{item.name}</Text>
                   <Text style={[styles.destAddr, { color: colors.muted }]}>
-                    {item.address}{isOtherIsland ? " · " + ISLAND_LABELS[item.island] : ""}
+                    {item.address}
                   </Text>
                 </View>
                 <View style={styles.destMeta}>
@@ -682,7 +680,7 @@ export default function RiderHome() {
           <View style={[styles.islandChip, { backgroundColor: colors.background + "F0" }]}>
             <IconSymbol name="location.fill" size={13} color={colors.primary} />
             <Text style={[styles.islandChipText, { color: colors.foreground }]}>
-              {ISLAND_LABELS[currentIsland]}
+              Nassau / Paradise Island
             </Text>
           </View>
 
@@ -728,7 +726,7 @@ export default function RiderHome() {
 
         {/* Quick destinations */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickDests}>
-          {islandDestinations.slice(0, 4).map((dest: PopularDestination) => {
+          {nassauDestinations.slice(0, 4).map((dest: PopularDestination) => {
             const dist = getDestDistance(dest);
             return (
               <Pressable
