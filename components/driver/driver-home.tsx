@@ -4,7 +4,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
-import { ISLAND_LABELS, RIDE_TYPE_CONFIG } from "@/lib/types";
+import { ISLAND_LABELS, RIDE_TYPE_CONFIG, getIslandShortLabel } from "@/lib/types";
 import { getNextMockRideRequest, getMockEarnings, createMockActiveRide } from "@/lib/mock-data";
 import type { RideRequest, ActiveRide } from "@/lib/types";
 import DriverTrip from "./driver-trip";
@@ -47,10 +47,10 @@ export default function DriverHome() {
     if (isOnline && !incomingRequest && !activeTrip) {
       const texts = [
         "Checking for riders on island...",
-        "Watching Bay Street area...",
-        "Keeping an eye on Paradise Island...",
-        "Covering Cable Beach zone...",
-        "Listening for downtown bookings...",
+        `Watching ${getIslandShortLabel(state.island)} pickups...`,
+        `Covering ${getIslandShortLabel(state.island)} demand...`,
+        "Listening for nearby bookings...",
+        "Ready for your next request...",
       ];
       let idx = 0;
       const interval = setInterval(() => {
@@ -59,14 +59,14 @@ export default function DriverHome() {
       }, 3000);
       return () => clearInterval(interval);
     }
-  }, [isOnline, incomingRequest, activeTrip]);
+  }, [activeTrip, incomingRequest, isOnline, state.island]);
 
   // Auto-generate ride requests when online
   useEffect(() => {
     if (state.driverStatus === "online" && !incomingRequest && !activeTrip) {
       const delay = declinedCount > 0 ? 3000 + Math.random() * 4000 : 5000 + Math.random() * 3000;
       const timeout = setTimeout(() => {
-        const request = getNextMockRideRequest();
+        const request = getNextMockRideRequest(state.island);
         setIncomingRequest(request);
         setRequestTimer(REQUEST_TIMEOUT);
         if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -113,7 +113,7 @@ export default function DriverHome() {
     setDeclinedCount(0);
 
     // Build trip from the request data
-    const trip = createMockActiveRide(false);
+      const trip = createMockActiveRide({ isRider: false, island: state.island });
     if (req) {
       trip.riderName = req.riderName;
       trip.riderRating = req.riderRating;
@@ -127,7 +127,7 @@ export default function DriverHome() {
     trip.status = "driver_en_route";
     setActiveTrip(trip);
     dispatch({ type: "SET_DRIVER_STATUS", status: "on_trip" });
-  }, [incomingRequest, dispatch]);
+  }, [incomingRequest, dispatch, state.island]);
 
   const handleDeclineRide = useCallback(() => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HapticTab } from "@/components/haptic-tab";
@@ -14,12 +13,11 @@ export default function TabLayout() {
   const { state } = useApp();
   const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
   const tabBarHeight = 60 + bottomPadding;
-  const [showOnboarding, setShowOnboarding] = useState(!state.hasOnboarded);
 
   const isDriver = state.role === "driver";
 
-  if (showOnboarding) {
-    return <Onboarding onComplete={() => setShowOnboarding(false)} />;
+  if (!state.hasOnboarded) {
+    return <Onboarding onComplete={() => undefined} />;
   }
 
   return (

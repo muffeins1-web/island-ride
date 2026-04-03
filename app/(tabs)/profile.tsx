@@ -6,7 +6,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
 import { ISLAND_LABELS } from "@/lib/types";
 import type { Island, FavoriteDriver, RideType, ActiveRide, PopularDestination } from "@/lib/types";
-import { POPULAR_DESTINATIONS, createMockActiveRide } from "@/lib/mock-data";
+import { createMockActiveRide, getRandomDestinationForIsland } from "@/lib/mock-data";
 import * as Haptics from "expo-haptics";
 
 import FavoriteDrivers from "@/components/rider/favorite-drivers";
@@ -49,7 +49,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Which islands are covered?",
-    a: "We currently operate across Nassau/Paradise Island, Grand Bahama, the Exumas, Eleuthera, Abaco, Andros, Bimini, and Long Island. Coverage varies by island — Nassau and Grand Bahama have the most drivers.",
+    a: "We currently operate across Nassau/Paradise Island, Grand Bahama, the Exumas, Eleuthera, Abaco, Andros, Bimini, and Long Island. Coverage varies by island - Nassau and Grand Bahama have the most drivers.",
   },
   {
     q: "How is the fare calculated?",
@@ -57,7 +57,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I schedule a ride in advance?",
-    a: "Advance scheduling is coming soon. For now, you can request rides on demand. Drivers typically arrive within 3–8 minutes in Nassau.",
+    a: "Advance scheduling is coming soon. For now, you can request rides on demand. Drivers typically arrive within 3-8 minutes in Nassau.",
   },
   {
     q: "How do I become a driver?",
@@ -123,8 +123,7 @@ export default function ProfileScreen() {
   const handleRequestFavDriver = useCallback((driver: FavoriteDriver) => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setRequestedDriverName(driver.name);
-    const islandDests = POPULAR_DESTINATIONS.filter((d) => d.island === state.island);
-    const dest = islandDests[Math.floor(Math.random() * islandDests.length)] || POPULAR_DESTINATIONS[0];
+    const dest = getRandomDestinationForIsland(state.island);
     setFavRideDest(dest);
     setFavRideType("standard");
     setView("fav_ride_options");
@@ -134,16 +133,17 @@ export default function ProfileScreen() {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setView("fav_ride_matching");
     setTimeout(() => {
-      const ride = createMockActiveRide(true);
-      ride.status = "driver_en_route";
-      ride.driverName = requestedDriverName || ride.driverName;
-      if (favRideDest) {
-        ride.dropoff = favRideDest.location;
-      }
+      const ride = createMockActiveRide({
+        isRider: true,
+        island: state.island,
+        dropoff: favRideDest?.location,
+        rideType: favRideType,
+        driverName: requestedDriverName || undefined,
+      });
       setFavActiveRide(ride);
       setView("fav_ride_tracking");
     }, 3000);
-  }, [favRideDest, requestedDriverName]);
+  }, [favRideDest, favRideType, requestedDriverName, state.island]);
 
   const handleFavRideComplete = useCallback(() => {
     if (favActiveRide) {
@@ -656,7 +656,7 @@ export default function ProfileScreen() {
           >
             <IconSymbol name="phone.fill" size={22} color="#fff" />
             <View>
-              <Text style={styles.emergencyTitle}>Emergency — Call 919</Text>
+              <Text style={styles.emergencyTitle}>Emergency - Call 919</Text>
               <Text style={styles.emergencySub}>Bahamas emergency services</Text>
             </View>
           </Pressable>
@@ -946,7 +946,7 @@ export default function ProfileScreen() {
           <Text style={[styles.aboutVersion, { color: colors.muted }]}>Version 1.0.0</Text>
           <Text style={[styles.aboutTagline, { color: colors.primary }]}>Ride the Islands</Text>
           <Text style={[styles.aboutDesc, { color: colors.muted }]}>
-            The Bahamas' island mobility service — connecting riders with trusted local drivers across Nassau, Grand Bahama, the Exumas, and beyond.
+            The Bahamas' island mobility service - connecting riders with trusted local drivers across Nassau, Grand Bahama, the Exumas, and beyond.
           </Text>
           <View style={[styles.aboutCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.aboutCardTitle, { color: colors.foreground }]}>Made in the Bahamas</Text>
@@ -982,7 +982,7 @@ export default function ProfileScreen() {
               <View style={styles.ratingRow}>
                 <IconSymbol name="star.fill" size={14} color={colors.warning} />
                 <Text style={[styles.ratingText, { color: colors.muted }]}>
-                  {state.userRating.toFixed(1)} · {state.totalRides} rides
+                  {state.userRating.toFixed(1)} � {state.totalRides} rides
                 </Text>
               </View>
             </View>
@@ -1030,32 +1030,40 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* General settings */}
-        <View style={[styles.menuSection, { backgroundColor: colors.surface }]}>
-          <MenuItem icon="location.fill" label={ISLAND_LABELS[state.island]} subtitle="Current island" colors={colors} onPress={() => setView("select_island")} />
-          <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-          <MenuItem icon="bell.fill" label="Notifications" subtitle="Ride alerts and updates" colors={colors} onPress={() => setView("notifications")} />
-          <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-          <MenuItem icon="creditcard.fill" label="Payment Methods" subtitle="Cash, card" colors={colors} onPress={() => setView("payment")} />
-          <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-          <MenuItem icon="shield.fill" label="Safety" subtitle="Emergency contacts, trip sharing" colors={colors} onPress={() => setView("safety")} accentColor={colors.error} />
-        </View>
-
-        {/* Driver-only */}
-        {state.role === "driver" && (
-          <View style={[styles.menuSection, { backgroundColor: colors.surface }]}>
-            <MenuItem icon="doc.text.fill" label="Driver Verification" subtitle="License, background check" colors={colors} onPress={() => setView("driver_verification")} />
-            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-            <MenuItem icon="car.fill" label="Vehicle Details" subtitle="Manage your vehicle" colors={colors} onPress={() => setView("vehicle_details")} />
+        {[
+          [
+            { icon: "location.fill", label: ISLAND_LABELS[state.island], subtitle: "Current island", view: "select_island" as const },
+            { icon: "bell.fill", label: "Notifications", subtitle: "Ride alerts and updates", view: "notifications" as const },
+            { icon: "creditcard.fill", label: "Payment Methods", subtitle: "Cash, card", view: "payment" as const },
+            { icon: "shield.fill", label: "Safety", subtitle: "Emergency contacts, trip sharing", view: "safety" as const, accentColor: colors.error },
+          ],
+          ...(state.role === "driver"
+            ? [[
+                { icon: "doc.text.fill", label: "Driver Verification", subtitle: "License, background check", view: "driver_verification" as const },
+                { icon: "car.fill", label: "Vehicle Details", subtitle: "Manage your vehicle", view: "vehicle_details" as const },
+              ]]
+            : []),
+          [
+            { icon: "info.circle.fill", label: "About IslandRide", subtitle: "Version 1.0.0", view: "about" as const },
+            { icon: "questionmark.circle.fill", label: "Help & Support", subtitle: "FAQs, contact us", view: "help" as const },
+          ],
+        ].map((section, sectionIndex) => (
+          <View key={sectionIndex} style={[styles.menuSection, { backgroundColor: colors.surface }]}>
+            {section.map((item, itemIndex) => (
+              <View key={item.view}>
+                {itemIndex > 0 && <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />}
+                <MenuItem
+                  icon={item.icon}
+                  label={item.label}
+                  subtitle={item.subtitle}
+                  colors={colors}
+                  onPress={() => setView(item.view)}
+                  accentColor={item.accentColor}
+                />
+              </View>
+            ))}
           </View>
-        )}
-
-        {/* About & Help */}
-        <View style={[styles.menuSection, { backgroundColor: colors.surface }]}>
-          <MenuItem icon="info.circle.fill" label="About IslandRide" subtitle="Version 1.0.0" colors={colors} onPress={() => setView("about")} />
-          <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-          <MenuItem icon="questionmark.circle.fill" label="Help & Support" subtitle="FAQs, contact us" colors={colors} onPress={() => setView("help")} />
-        </View>
+        ))}
       </ScrollView>
     </ScreenContainer>
   );

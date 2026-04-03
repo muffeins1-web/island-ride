@@ -15,8 +15,15 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
-import { POPULAR_DESTINATIONS, NEARBY_DRIVERS, createMockActiveRide } from "@/lib/mock-data";
-import { ISLAND_LABELS, RIDE_TYPE_CONFIG, calculateFare } from "@/lib/types";
+import {
+  POPULAR_DESTINATIONS,
+  createMockActiveRide,
+  getCurrentLocationForIsland,
+  getDestinationEstimate,
+  getNearbyDriversForIsland,
+  getSavedPlacesForIsland,
+} from "@/lib/mock-data";
+import { ISLAND_LABELS, RIDE_TYPE_CONFIG, calculateFare, getIslandShortLabel } from "@/lib/types";
 import type { PopularDestination, RideType, ActiveRide } from "@/lib/types";
 import RideOptions from "./ride-options";
 import RideTracking from "./ride-tracking";
@@ -27,86 +34,6 @@ import * as Haptics from "expo-haptics";
 const GOLD = "#D4A853";
 
 type RiderView = "home" | "search" | "options" | "matching" | "driver_found" | "tracking" | "complete";
-
-// Simulated distances from "current location" for each destination
-const DEST_DISTANCES: Record<string, { km: number; mins: number }> = {
-  "1": { km: 14.2, mins: 22 },  // Airport
-  "2": { km: 8.5, mins: 15 },   // Atlantis
-  "3": { km: 3.2, mins: 8 },    // Downtown
-  "4": { km: 6.8, mins: 14 },   // Cable Beach
-  "5": { km: 3.5, mins: 9 },    // Cruise Port
-  "6": { km: 4.1, mins: 10 },   // Fish Fry
-  "7": { km: 3.0, mins: 7 },    // Bay Street
-  "8": { km: 7.2, mins: 15 },   // Baha Mar
-  "9": { km: 2.8, mins: 6 },    // Junkanoo Beach
-  "10": { km: 2.1, mins: 5 },   // Queen's Staircase
-  "11": { km: 4.5, mins: 11 },  // Fort Charlotte
-  "12": { km: 2.9, mins: 7 },   // Straw Market
-  "13": { km: 9.0, mins: 16 },  // Comfort Suites
-  "14": { km: 4.0, mins: 9 },   // Potter's Cay
-  "15": { km: 2.5, mins: 6 },   // PMH
-  "16": { km: 5.5, mins: 12 },  // UB
-  "gb1": { km: 4.2, mins: 10 }, // Port Lucaya
-  "gb2": { km: 8.0, mins: 16 }, // GB Airport
-  "gb3": { km: 18.0, mins: 28 },// Lucayan Park
-  "gb4": { km: 5.5, mins: 12 }, // Taino Beach
-  "gb5": { km: 3.8, mins: 9 },  // Intl Bazaar
-  "gb6": { km: 10.0, mins: 18 },// Freeport Harbour
-  "ex1": { km: 3.0, mins: 8 },  // George Town
-  "ex2": { km: 6.5, mins: 14 }, // Exuma Airport
-  "ex3": { km: 4.0, mins: 10 }, // Stocking Island
-  "el1": { km: 5.0, mins: 12 }, // GHB Airport
-  "el2": { km: 8.0, mins: 18 }, // Harbour Island
-  "el3": { km: 12.0, mins: 22 },// Glass Window
-  "ab1": { km: 4.5, mins: 10 }, // Marsh Harbour
-  "ab2": { km: 7.0, mins: 15 }, // Hope Town
-  "bi1": { km: 3.0, mins: 7 },  // Resorts World
-  "bi2": { km: 5.0, mins: 11 }, // Bimini Airport
-  "an1": { km: 4.0, mins: 9 },  // Andros Airport
-  "an2": { km: 6.0, mins: 13 }, // Small Hope Bay
-  "li1": { km: 5.0, mins: 11 }, // Stella Maris
-  "li2": { km: 10.0, mins: 20 },// Dean's Blue Hole
-};
-
-// Saved places for the user
-const SAVED_PLACES: { label: string; icon: string; dest: PopularDestination }[] = [
-  {
-    label: "Home",
-    icon: "house.fill",
-    dest: {
-      id: "saved_home",
-      name: "Home",
-      address: "Eastern Road, Nassau",
-      icon: "house.fill",
-      location: { latitude: 25.0443, longitude: -77.3504, name: "Home", address: "Eastern Road, Nassau" },
-      island: "nassau",
-    },
-  },
-  {
-    label: "Work",
-    icon: "building.2.fill",
-    dest: {
-      id: "saved_work",
-      name: "Work",
-      address: "Frederick Street, Nassau",
-      icon: "building.2.fill",
-      location: { latitude: 25.0770, longitude: -77.3410, name: "Work", address: "Frederick Street, Nassau" },
-      island: "nassau",
-    },
-  },
-  {
-    label: "Airport",
-    icon: "paperplane.fill",
-    dest: {
-      id: "1",
-      name: "Lynden Pindling Intl Airport",
-      address: "Windsor Field Rd, Nassau",
-      icon: "paperplane.fill",
-      location: { latitude: 25.039, longitude: -77.4662, name: "Nassau Airport" },
-      island: "nassau",
-    },
-  },
-];
 
 const DRIVER_NAMES = [
   "Marcus Thompson", "Sandra Williams", "Devon Rolle",
@@ -133,7 +60,8 @@ export default function RiderHome() {
 
   const currentIsland = state.island;
   const islandDestinations = POPULAR_DESTINATIONS.filter((d) => d.island === currentIsland);
-  // When searching, also search across ALL islands for broader results
+  const savedPlaces = useMemo(() => getSavedPlacesForIsland(currentIsland), [currentIsland]);
+  const nearbyDrivers = useMemo(() => getNearbyDriversForIsland(currentIsland), [currentIsland]);
   const allDestinations = POPULAR_DESTINATIONS;
   const filteredDestinations = searchText
     ? allDestinations.filter(
@@ -157,7 +85,7 @@ export default function RiderHome() {
   }, [state.rideHistory]);
 
   const getDestDistance = useCallback((dest: PopularDestination) => {
-    return DEST_DISTANCES[dest.id] || { km: 5 + Math.random() * 10, mins: 10 + Math.round(Math.random() * 15) };
+    return getDestinationEstimate(dest);
   }, []);
 
   const handleSelectDestination = useCallback((dest: PopularDestination) => {
@@ -193,13 +121,17 @@ export default function RiderHome() {
       const fare = calculateFare(dist.km, dist.mins, selectedRideType);
 
       const ride: ActiveRide = {
+        ...createMockActiveRide({
+          isRider: true,
+          island: currentIsland,
+          pickup: getCurrentLocationForIsland(currentIsland),
+          dropoff: selectedDestination?.location,
+          rideType: selectedRideType,
+          driverName: DRIVER_NAMES[driverIdx],
+          driverRating: 4.5 + Math.random() * 0.5,
+        }),
         id: `ride-${Date.now()}`,
-        riderId: "rider123",
         driverId: `driver-${driverIdx}`,
-        riderName: "You",
-        driverName: DRIVER_NAMES[driverIdx],
-        driverRating: 4.5 + Math.random() * 0.5,
-        riderRating: 4.8,
         vehicleInfo: {
           make: vehicle.make,
           model: vehicle.model,
@@ -208,21 +140,17 @@ export default function RiderHome() {
           plateNumber: vehicle.plate,
           seats: 4,
         },
-        pickup: { latitude: 25.0781, longitude: -77.3431, name: "Current Location", address: "Nassau, Bahamas" },
-        dropoff: selectedDestination?.location || { latitude: 25.0867, longitude: -77.3233, name: "Atlantis Resort" },
-        rideType: selectedRideType,
-        status: "driver_en_route",
         fare,
         estimatedDuration: dist.mins,
         estimatedDistance: dist.km,
-        driverLocation: { latitude: 25.073, longitude: -77.35 },
+        driverLocation: nearbyDrivers[driverIdx % nearbyDrivers.length],
         eta: 3 + Math.floor(Math.random() * 4),
       };
       setActiveRide(ride);
       setView("driver_found");
       if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }, 3500);
-  }, [selectedDestination, selectedRideType, getDestDistance]);
+  }, [currentIsland, getDestDistance, nearbyDrivers, selectedDestination, selectedRideType]);
 
   const handleConfirmDriver = useCallback(() => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -316,7 +244,7 @@ export default function RiderHome() {
                   <Text style={[styles.driverFoundRating, { color: colors.muted }]}>
                     {activeRide.driverRating.toFixed(1)}
                   </Text>
-                  <Text style={[{ color: colors.border }]}> · </Text>
+                  <Text style={[{ color: colors.border }]}> � </Text>
                   <Text style={[styles.driverFoundTrips, { color: colors.muted }]}>
                     {200 + Math.floor(Math.random() * 800)} trips
                   </Text>
@@ -545,7 +473,7 @@ export default function RiderHome() {
         {/* Saved places */}
         {!searchText && (
           <View style={styles.savedRow}>
-            {SAVED_PLACES.map((sp) => (
+            {savedPlaces.map((sp) => (
               <Pressable
                 key={sp.label}
                 onPress={() => handleSelectDestination(sp.dest)}
@@ -634,7 +562,7 @@ export default function RiderHome() {
         <Text style={[styles.sectionLabel, { color: colors.muted }]}>
           {searchText
             ? `${filteredDestinations.length} result${filteredDestinations.length !== 1 ? "s" : ""} for "${searchText}"`
-            : "Popular on " + ISLAND_LABELS[currentIsland].split("/")[0].trim()}
+            : "Popular on " + getIslandShortLabel(currentIsland)}
         </Text>
 
         <FlatList
@@ -660,7 +588,7 @@ export default function RiderHome() {
                 <View style={styles.destInfo}>
                   <Text style={[styles.destName, { color: colors.foreground }]}>{item.name}</Text>
                   <Text style={[styles.destAddr, { color: colors.muted }]}>
-                    {item.address}{isOtherIsland ? " · " + ISLAND_LABELS[item.island] : ""}
+                    {item.address}{isOtherIsland ? " � " + ISLAND_LABELS[item.island] : ""}
                   </Text>
                 </View>
                 <View style={styles.destMeta}>
@@ -683,7 +611,7 @@ export default function RiderHome() {
   }
 
   // ── Home View ──
-  const driverCount = NEARBY_DRIVERS.length;
+  const driverCount = nearbyDrivers.length;
   return (
     <ScreenContainer>
       {/* Map Background */}

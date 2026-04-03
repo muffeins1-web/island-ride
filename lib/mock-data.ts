@@ -7,13 +7,43 @@ import type {
   ActiveRide,
   Location,
   FavoriteDriver,
+  RideType,
+  Island,
 } from "./types";
+import { ISLAND_COORDS, calculateFare, getIslandShortLabel } from "./types";
 
-// ============================================================
-// Popular Destinations (Nassau)
-// ============================================================
+export interface SavedPlace {
+  label: string;
+  icon: string;
+  dest: PopularDestination;
+}
+
+const DEFAULT_DRIVER_NAMES = [
+  "Marcus Thompson",
+  "Sandra Williams",
+  "Devon Rolle",
+  "Keisha Ferguson",
+  "Ricardo Cartwright",
+  "Tamika Sands",
+];
+
+const DEFAULT_RIDERS = [
+  { id: "rider123", name: "Sarah Johnson", rating: 4.8 },
+  { id: "rider456", name: "David Chen", rating: 4.6 },
+  { id: "rider789", name: "Maria Santos", rating: 4.9 },
+  { id: "rider321", name: "James Mitchell", rating: 4.5 },
+  { id: "rider654", name: "Keisha Brown", rating: 5.0 },
+];
+
+const VEHICLE_OPTIONS = [
+  { make: "Toyota", model: "Camry", year: 2024, color: "White", plateNumber: "NP-4521" },
+  { make: "Honda", model: "Accord", year: 2023, color: "Silver", plateNumber: "NP-7832" },
+  { make: "Nissan", model: "Altima", year: 2024, color: "Black", plateNumber: "NP-6190" },
+  { make: "BMW", model: "5 Series", year: 2025, color: "Midnight Blue", plateNumber: "NP-1088" },
+  { make: "Mercedes", model: "E-Class", year: 2025, color: "Pearl White", plateNumber: "NP-2255" },
+];
+
 export const POPULAR_DESTINATIONS: PopularDestination[] = [
-  // ── Nassau / Paradise Island ──
   {
     id: "1",
     name: "Lynden Pindling Intl Airport",
@@ -115,7 +145,7 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Comfort Suites Paradise Island",
     address: "Paradise Island Dr, Paradise Island",
     icon: "star.fill",
-    location: { latitude: 25.0855, longitude: -77.3260, name: "Comfort Suites" },
+    location: { latitude: 25.0855, longitude: -77.326, name: "Comfort Suites" },
     island: "nassau",
   },
   {
@@ -123,7 +153,7 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Potter's Cay Dock",
     address: "East Bay Street, Nassau",
     icon: "flag.fill",
-    location: { latitude: 25.0815, longitude: -77.3350, name: "Potter's Cay" },
+    location: { latitude: 25.0815, longitude: -77.335, name: "Potter's Cay" },
     island: "nassau",
   },
   {
@@ -131,7 +161,7 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Princess Margaret Hospital",
     address: "Shirley Street, Nassau",
     icon: "heart.fill",
-    location: { latitude: 25.0720, longitude: -77.3380, name: "PMH" },
+    location: { latitude: 25.072, longitude: -77.338, name: "PMH" },
     island: "nassau",
   },
   {
@@ -139,16 +169,15 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "University of The Bahamas",
     address: "University Dr, Oakes Field",
     icon: "building.2.fill",
-    location: { latitude: 25.0600, longitude: -77.3550, name: "UB" },
+    location: { latitude: 25.06, longitude: -77.355, name: "UB" },
     island: "nassau",
   },
-  // ── Grand Bahama ──
   {
     id: "gb1",
     name: "Port Lucaya Marketplace",
     address: "Sea Horse Rd, Freeport",
     icon: "map.fill",
-    location: { latitude: 26.5280, longitude: -78.6567, name: "Port Lucaya" },
+    location: { latitude: 26.528, longitude: -78.6567, name: "Port Lucaya" },
     island: "grand_bahama",
   },
   {
@@ -172,7 +201,7 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Taino Beach",
     address: "Jolly Roger Dr, Freeport",
     icon: "sun.max.fill",
-    location: { latitude: 26.5100, longitude: -78.6700, name: "Taino Beach" },
+    location: { latitude: 26.51, longitude: -78.67, name: "Taino Beach" },
     island: "grand_bahama",
   },
   {
@@ -180,7 +209,7 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "International Bazaar",
     address: "East Mall Dr, Freeport",
     icon: "map.fill",
-    location: { latitude: 26.5350, longitude: -78.6900, name: "Intl Bazaar" },
+    location: { latitude: 26.535, longitude: -78.69, name: "Intl Bazaar" },
     island: "grand_bahama",
   },
   {
@@ -188,10 +217,9 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Freeport Harbour",
     address: "Freeport Harbour, Grand Bahama",
     icon: "flag.fill",
-    location: { latitude: 26.5200, longitude: -78.7500, name: "Freeport Harbour" },
+    location: { latitude: 26.52, longitude: -78.75, name: "Freeport Harbour" },
     island: "grand_bahama",
   },
-  // ── Exumas ──
   {
     id: "ex1",
     name: "George Town",
@@ -205,7 +233,7 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Exuma Intl Airport",
     address: "Queen's Highway, Moss Town",
     icon: "paperplane.fill",
-    location: { latitude: 23.5625, longitude: -75.8780, name: "Exuma Airport" },
+    location: { latitude: 23.5625, longitude: -75.878, name: "Exuma Airport" },
     island: "exumas",
   },
   {
@@ -213,16 +241,15 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Stocking Island Beach",
     address: "Stocking Island, Exuma",
     icon: "sun.max.fill",
-    location: { latitude: 23.5250, longitude: -75.7600, name: "Stocking Island" },
+    location: { latitude: 23.525, longitude: -75.76, name: "Stocking Island" },
     island: "exumas",
   },
-  // ── Eleuthera ──
   {
     id: "el1",
     name: "Governor's Harbour Airport",
     address: "Queen's Highway, Governor's Harbour",
     icon: "paperplane.fill",
-    location: { latitude: 25.2847, longitude: -76.3310, name: "GHB Airport" },
+    location: { latitude: 25.2847, longitude: -76.331, name: "GHB Airport" },
     island: "eleuthera",
   },
   {
@@ -230,7 +257,7 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Harbour Island",
     address: "Pink Sands Beach, Harbour Island",
     icon: "sun.max.fill",
-    location: { latitude: 25.5000, longitude: -76.6333, name: "Harbour Island" },
+    location: { latitude: 25.5, longitude: -76.6333, name: "Harbour Island" },
     island: "eleuthera",
   },
   {
@@ -238,10 +265,9 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Glass Window Bridge",
     address: "Queen's Highway, Eleuthera",
     icon: "map.fill",
-    location: { latitude: 25.3500, longitude: -76.2000, name: "Glass Window" },
+    location: { latitude: 25.35, longitude: -76.2, name: "Glass Window" },
     island: "eleuthera",
   },
-  // ── Abaco ──
   {
     id: "ab1",
     name: "Marsh Harbour Airport",
@@ -255,16 +281,15 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Hope Town",
     address: "Elbow Cay, Abaco",
     icon: "map.fill",
-    location: { latitude: 26.5400, longitude: -76.9667, name: "Hope Town" },
+    location: { latitude: 26.54, longitude: -76.9667, name: "Hope Town" },
     island: "abaco",
   },
-  // ── Bimini ──
   {
     id: "bi1",
     name: "Resorts World Bimini",
     address: "North Bimini, Bimini",
     icon: "star.fill",
-    location: { latitude: 25.7300, longitude: -79.2700, name: "Resorts World" },
+    location: { latitude: 25.73, longitude: -79.27, name: "Resorts World" },
     island: "bimini",
   },
   {
@@ -275,7 +300,6 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     location: { latitude: 25.6998, longitude: -79.2647, name: "Bimini Airport" },
     island: "bimini",
   },
-  // ── Andros ──
   {
     id: "an1",
     name: "Andros Town Airport",
@@ -289,10 +313,9 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Small Hope Bay Lodge",
     address: "Fresh Creek, Andros",
     icon: "star.fill",
-    location: { latitude: 24.7500, longitude: -77.7833, name: "Small Hope Bay" },
+    location: { latitude: 24.75, longitude: -77.7833, name: "Small Hope Bay" },
     island: "andros",
   },
-  // ── Long Island ──
   {
     id: "li1",
     name: "Stella Maris Airport",
@@ -306,14 +329,181 @@ export const POPULAR_DESTINATIONS: PopularDestination[] = [
     name: "Dean's Blue Hole",
     address: "Clarence Town, Long Island",
     icon: "sun.max.fill",
-    location: { latitude: 23.1050, longitude: -75.0967, name: "Dean's Blue Hole" },
+    location: { latitude: 23.105, longitude: -75.0967, name: "Dean's Blue Hole" },
     island: "long_island",
   },
 ];
 
-// ============================================================
-// Mock Ride History
-// ============================================================
+export const DESTINATION_DISTANCE_BY_ID: Record<string, { km: number; mins: number }> = {
+  "1": { km: 14.2, mins: 22 },
+  "2": { km: 8.5, mins: 15 },
+  "3": { km: 3.2, mins: 8 },
+  "4": { km: 6.8, mins: 14 },
+  "5": { km: 3.5, mins: 9 },
+  "6": { km: 4.1, mins: 10 },
+  "7": { km: 3, mins: 7 },
+  "8": { km: 7.2, mins: 15 },
+  "9": { km: 2.8, mins: 6 },
+  "10": { km: 2.1, mins: 5 },
+  "11": { km: 4.5, mins: 11 },
+  "12": { km: 2.9, mins: 7 },
+  "13": { km: 9, mins: 16 },
+  "14": { km: 4, mins: 9 },
+  "15": { km: 2.5, mins: 6 },
+  "16": { km: 5.5, mins: 12 },
+  gb1: { km: 4.2, mins: 10 },
+  gb2: { km: 8, mins: 16 },
+  gb3: { km: 18, mins: 28 },
+  gb4: { km: 5.5, mins: 12 },
+  gb5: { km: 3.8, mins: 9 },
+  gb6: { km: 10, mins: 18 },
+  ex1: { km: 3, mins: 8 },
+  ex2: { km: 6.5, mins: 14 },
+  ex3: { km: 4, mins: 10 },
+  el1: { km: 5, mins: 12 },
+  el2: { km: 8, mins: 18 },
+  el3: { km: 12, mins: 22 },
+  ab1: { km: 4.5, mins: 10 },
+  ab2: { km: 7, mins: 15 },
+  bi1: { km: 3, mins: 7 },
+  bi2: { km: 5, mins: 11 },
+  an1: { km: 4, mins: 9 },
+  an2: { km: 6, mins: 13 },
+  li1: { km: 5, mins: 11 },
+  li2: { km: 10, mins: 20 },
+};
+
+export const POPULAR_DESTINATIONS_BY_ISLAND = POPULAR_DESTINATIONS.reduce(
+  (acc, destination) => {
+    acc[destination.island].push(destination);
+    return acc;
+  },
+  {
+    nassau: [],
+    grand_bahama: [],
+    exumas: [],
+    abaco: [],
+    eleuthera: [],
+    andros: [],
+    bimini: [],
+    long_island: [],
+  } as Record<Island, PopularDestination[]>,
+);
+
+function offsetLocation(base: { lat: number; lng: number }, latOffset: number, lngOffset: number, name?: string, address?: string): Location {
+  return {
+    latitude: Number((base.lat + latOffset).toFixed(4)),
+    longitude: Number((base.lng + lngOffset).toFixed(4)),
+    name,
+    address,
+  };
+}
+
+export function getDestinationsForIsland(island: Island): PopularDestination[] {
+  return POPULAR_DESTINATIONS_BY_ISLAND[island];
+}
+
+export function getRandomDestinationForIsland(island: Island): PopularDestination {
+  const destinations = getDestinationsForIsland(island);
+  return destinations[Math.floor(Math.random() * destinations.length)] ?? POPULAR_DESTINATIONS[0];
+}
+
+export function findDestinationByNameOrAddress(query: string, preferredIsland?: Island): PopularDestination | null {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return null;
+
+  const matches = POPULAR_DESTINATIONS.filter(
+    (destination) =>
+      destination.name.toLowerCase() === normalized ||
+      destination.location.name?.toLowerCase() === normalized ||
+      destination.address.toLowerCase().includes(normalized),
+  );
+
+  if (preferredIsland) {
+    const islandMatch = matches.find((destination) => destination.island === preferredIsland);
+    if (islandMatch) return islandMatch;
+  }
+
+  return matches[0] ?? null;
+}
+
+export function getDestinationEstimate(destination: PopularDestination): { km: number; mins: number } {
+  return DESTINATION_DISTANCE_BY_ID[destination.id] ?? { km: 5, mins: 12 };
+}
+
+export function getCurrentLocationForIsland(island: Island): Location {
+  const shortLabel = getIslandShortLabel(island);
+  return {
+    latitude: ISLAND_COORDS[island].lat,
+    longitude: ISLAND_COORDS[island].lng,
+    name: "Current Location",
+    address: `${shortLabel}, Bahamas`,
+  };
+}
+
+export function getSavedPlacesForIsland(island: Island): SavedPlace[] {
+  const center = ISLAND_COORDS[island];
+  const airport =
+    getDestinationsForIsland(island).find((destination) => destination.name.toLowerCase().includes("airport")) ??
+    getDestinationsForIsland(island)[0];
+  const shortLabel = getIslandShortLabel(island);
+
+  return [
+    {
+      label: "Home",
+      icon: "house.fill",
+      dest: {
+        id: `saved-home-${island}`,
+        name: "Home",
+        address: `${shortLabel}, Bahamas`,
+        icon: "house.fill",
+        location: offsetLocation(center, 0.0025, -0.0025, "Home", `${shortLabel}, Bahamas`),
+        island,
+      },
+    },
+    {
+      label: "Work",
+      icon: "building.2.fill",
+      dest: {
+        id: `saved-work-${island}`,
+        name: "Work",
+        address: `${shortLabel}, Bahamas`,
+        icon: "building.2.fill",
+        location: offsetLocation(center, 0.006, 0.003, "Work", `${shortLabel}, Bahamas`),
+        island,
+      },
+    },
+    {
+      label: airport?.name.toLowerCase().includes("airport") ? "Airport" : airport?.name ?? "Saved Place",
+      icon: airport?.icon ?? "mappin.and.ellipse",
+      dest: airport ?? {
+        id: `saved-airport-${island}`,
+        name: "Airport",
+        address: `${shortLabel}, Bahamas`,
+        icon: "paperplane.fill",
+        location: offsetLocation(center, -0.004, 0.004, "Airport", `${shortLabel}, Bahamas`),
+        island,
+      },
+    },
+  ];
+}
+
+const DRIVER_OFFSETS = [
+  { lat: 0.0035, lng: 0.004 },
+  { lat: -0.0025, lng: 0.006 },
+  { lat: 0.0045, lng: -0.0035 },
+  { lat: -0.0055, lng: -0.004 },
+  { lat: 0.006, lng: 0.0015 },
+  { lat: -0.003, lng: -0.0065 },
+];
+
+export function getNearbyDriversForIsland(island: Island): Location[] {
+  const center = ISLAND_COORDS[island];
+  return DRIVER_OFFSETS.map((offset, index) =>
+    offsetLocation(center, offset.lat, offset.lng, `Driver ${index + 1}`),
+  );
+}
+
 export const MOCK_RIDE_HISTORY: RideHistoryItem[] = [
   {
     id: "r1",
@@ -328,7 +518,7 @@ export const MOCK_RIDE_HISTORY: RideHistoryItem[] = [
     driverRating: 4.9,
     riderRating: 5,
     date: "2026-03-10T14:30:00Z",
-    tip: 3.0,
+    tip: 3,
   },
   {
     id: "r2",
@@ -336,14 +526,14 @@ export const MOCK_RIDE_HISTORY: RideHistoryItem[] = [
     dropoff: { latitude: 25.039, longitude: -77.4662, name: "Nassau Airport", address: "Windsor Field Rd" },
     rideType: "premium",
     status: "completed",
-    fare: 35.0,
+    fare: 35,
     distance: 14.5,
     duration: 22,
     driverName: "Sandra Williams",
     driverRating: 4.8,
     riderRating: 5,
     date: "2026-03-09T08:15:00Z",
-    tip: 5.0,
+    tip: 5,
   },
   {
     id: "r3",
@@ -373,9 +563,6 @@ export const MOCK_RIDE_HISTORY: RideHistoryItem[] = [
   },
 ];
 
-// ============================================================
-// Mock Earnings
-// ============================================================
 export function getMockEarnings(period: "today" | "week" | "month"): EarningsSummary {
   const breakdowns: Record<string, DailyEarning[]> = {
     today: [
@@ -403,8 +590,8 @@ export function getMockEarnings(period: "today" | "week" | "month"): EarningsSum
   };
 
   const daily = breakdowns[period] || breakdowns.today;
-  const total = daily.reduce((s, d) => s + d.earnings, 0);
-  const trips = daily.reduce((s, d) => s + d.trips, 0);
+  const total = daily.reduce((sum, item) => sum + item.earnings, 0);
+  const trips = daily.reduce((sum, item) => sum + item.trips, 0);
 
   return {
     period,
@@ -417,128 +604,119 @@ export function getMockEarnings(period: "today" | "week" | "month"): EarningsSum
   };
 }
 
-// ============================================================
-// Mock Incoming Ride Requests (for driver — rotates through varied requests)
-// ============================================================
-export const MOCK_RIDE_REQUESTS: RideRequest[] = [
-  {
-    id: "req1",
-    riderId: "rider123",
-    riderName: "Sarah Johnson",
-    riderRating: 4.8,
-    pickup: { latitude: 25.0781, longitude: -77.3431, name: "Bay Street", address: "Downtown Nassau" },
-    dropoff: { latitude: 25.0867, longitude: -77.3233, name: "Atlantis Resort", address: "Paradise Island" },
-    rideType: "standard",
-    estimatedFare: 16.5,
-    estimatedDuration: 12,
-    estimatedDistance: 6.8,
-    island: "nassau",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "req2",
-    riderId: "rider456",
-    riderName: "David Chen",
-    riderRating: 4.6,
-    pickup: { latitude: 25.0755, longitude: -77.4078, name: "Cable Beach", address: "West Bay St, Nassau" },
-    dropoff: { latitude: 25.039, longitude: -77.4662, name: "Nassau Airport", address: "Windsor Field Rd" },
-    rideType: "premium",
-    estimatedFare: 28.0,
-    estimatedDuration: 18,
-    estimatedDistance: 9.4,
-    island: "nassau",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "req3",
-    riderId: "rider789",
-    riderName: "Maria Santos",
-    riderRating: 4.9,
-    pickup: { latitude: 25.0788, longitude: -77.3458, name: "Prince George Wharf", address: "Woodes Rogers Walk" },
-    dropoff: { latitude: 25.0833, longitude: -77.3583, name: "Fish Fry", address: "Arawak Cay, Nassau" },
-    rideType: "standard",
-    estimatedFare: 9.5,
-    estimatedDuration: 8,
-    estimatedDistance: 3.2,
-    island: "nassau",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "req4",
-    riderId: "rider321",
-    riderName: "James Mitchell",
-    riderRating: 4.5,
-    pickup: { latitude: 25.0867, longitude: -77.3233, name: "Atlantis Resort", address: "Paradise Island" },
-    dropoff: { latitude: 25.0781, longitude: -77.3431, name: "Bay Street", address: "Downtown Nassau" },
-    rideType: "shared",
-    estimatedFare: 7.5,
-    estimatedDuration: 14,
-    estimatedDistance: 5.6,
-    island: "nassau",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "req5",
-    riderId: "rider654",
-    riderName: "Keisha Brown",
-    riderRating: 5.0,
-    pickup: { latitude: 25.039, longitude: -77.4662, name: "Nassau Airport", address: "Windsor Field Rd" },
-    dropoff: { latitude: 25.0755, longitude: -77.4078, name: "Cable Beach", address: "Baha Mar Blvd" },
-    rideType: "premium",
-    estimatedFare: 32.0,
-    estimatedDuration: 15,
-    estimatedDistance: 7.8,
-    island: "nassau",
-    createdAt: new Date().toISOString(),
-  },
-];
+function buildRideRequestTemplates(island: Island): RideRequest[] {
+  const destinations = getDestinationsForIsland(island);
+  const pickupBase = destinations[0] ?? getRandomDestinationForIsland(island);
+  const alternatePickup = destinations[1] ?? pickupBase;
+  const thirdStop = destinations[2] ?? alternatePickup;
+  const fourthStop = destinations[3] ?? thirdStop;
+  const fifthStop = destinations[4] ?? fourthStop;
 
-// Keep backward compat
-export const MOCK_RIDE_REQUEST: RideRequest = MOCK_RIDE_REQUESTS[0];
+  const routes = [
+    { pickup: alternatePickup, dropoff: pickupBase, rideType: "standard" as RideType },
+    { pickup: pickupBase, dropoff: thirdStop, rideType: "premium" as RideType },
+    { pickup: thirdStop, dropoff: fourthStop, rideType: "standard" as RideType },
+    { pickup: fourthStop, dropoff: alternatePickup, rideType: "shared" as RideType },
+    { pickup: fifthStop, dropoff: pickupBase, rideType: "premium" as RideType },
+  ];
 
-let _requestIndex = 0;
-export function getNextMockRideRequest(): RideRequest {
-  const req = { ...MOCK_RIDE_REQUESTS[_requestIndex % MOCK_RIDE_REQUESTS.length], id: `req_${Date.now()}`, createdAt: new Date().toISOString() };
-  _requestIndex++;
-  return req;
+  return routes.map((route, index) => {
+    const rider = DEFAULT_RIDERS[index % DEFAULT_RIDERS.length];
+    const estimate = getDestinationEstimate(route.dropoff);
+    return {
+      id: `req-${island}-${index + 1}`,
+      riderId: rider.id,
+      riderName: rider.name,
+      riderRating: rider.rating,
+      pickup: route.pickup.location,
+      dropoff: route.dropoff.location,
+      rideType: route.rideType,
+      estimatedFare: calculateFare(estimate.km, estimate.mins, route.rideType),
+      estimatedDuration: estimate.mins,
+      estimatedDistance: estimate.km,
+      island,
+      createdAt: new Date().toISOString(),
+    };
+  });
 }
 
-// ============================================================
-// Mock Active Ride
-// ============================================================
-export function createMockActiveRide(isRider: boolean): ActiveRide {
+export function getMockRideRequestsForIsland(island: Island): RideRequest[] {
+  return buildRideRequestTemplates(island);
+}
+
+export const MOCK_RIDE_REQUESTS: RideRequest[] = getMockRideRequestsForIsland("nassau");
+export const MOCK_RIDE_REQUEST: RideRequest = MOCK_RIDE_REQUESTS[0];
+
+let requestIndex = 0;
+
+export function getNextMockRideRequest(island: Island = "nassau"): RideRequest {
+  const requests = getMockRideRequestsForIsland(island);
+  const request = requests[requestIndex % requests.length];
+  requestIndex += 1;
   return {
-    id: "active1",
+    ...request,
+    id: `req_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+interface CreateMockActiveRideOptions {
+  isRider: boolean;
+  island?: Island;
+  pickup?: Location;
+  dropoff?: Location;
+  rideType?: RideType;
+  riderName?: string;
+  driverName?: string;
+  riderRating?: number;
+  driverRating?: number;
+}
+
+export function createMockActiveRide(input: boolean | CreateMockActiveRideOptions): ActiveRide {
+  const options: CreateMockActiveRideOptions =
+    typeof input === "boolean" ? { isRider: input } : input;
+
+  const island = options.island ?? "nassau";
+  const rideType = options.rideType ?? "standard";
+  const destination = options.dropoff ?? getRandomDestinationForIsland(island).location;
+  const estimate =
+    options.dropoff && "name" in options.dropoff && options.dropoff.name
+      ? getDestinationEstimate(
+          POPULAR_DESTINATIONS.find((item) => item.location.name === options.dropoff?.name) ??
+            getRandomDestinationForIsland(island),
+        )
+      : getDestinationEstimate(getRandomDestinationForIsland(island));
+  const vehicle = rideType === "premium" ? VEHICLE_OPTIONS[3] : VEHICLE_OPTIONS[0];
+
+  return {
+    id: `active-${Date.now()}`,
     riderId: "rider123",
     driverId: "driver456",
-    riderName: isRider ? "You" : "Sarah Johnson",
-    driverName: isRider ? "Marcus Thompson" : "You",
-    driverRating: 4.9,
-    riderRating: 4.8,
+    riderName: options.isRider ? "You" : options.riderName ?? DEFAULT_RIDERS[0].name,
+    driverName: options.isRider ? options.driverName ?? DEFAULT_DRIVER_NAMES[0] : options.driverName ?? "You",
+    driverRating: options.driverRating ?? 4.9,
+    riderRating: options.riderRating ?? 4.8,
     driverPhoto: undefined,
     vehicleInfo: {
-      make: "Toyota",
-      model: "Camry",
-      year: 2024,
-      color: "White",
-      plateNumber: "NP-4521",
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      color: vehicle.color,
+      plateNumber: vehicle.plateNumber,
       seats: 4,
     },
-    pickup: { latitude: 25.0781, longitude: -77.3431, name: "Bay Street", address: "Downtown Nassau" },
-    dropoff: { latitude: 25.0867, longitude: -77.3233, name: "Atlantis Resort", address: "Paradise Island" },
-    rideType: "standard",
+    pickup: options.pickup ?? getCurrentLocationForIsland(island),
+    dropoff: destination,
+    rideType,
     status: "driver_en_route",
-    fare: 16.5,
-    estimatedDuration: 12,
-    estimatedDistance: 6.8,
-    driverLocation: { latitude: 25.073, longitude: -77.35 },
+    fare: calculateFare(estimate.km, estimate.mins, rideType),
+    estimatedDuration: estimate.mins,
+    estimatedDistance: estimate.km,
+    driverLocation: getNearbyDriversForIsland(island)[0],
     eta: 4,
   };
 }
 
-// ============================================================
-// Mock Favorite Drivers (for demo)
-// ============================================================
 export const MOCK_FAVORITE_DRIVERS: FavoriteDriver[] = [
   {
     id: "driver456",
@@ -578,12 +756,4 @@ export const MOCK_FAVORITE_DRIVERS: FavoriteDriver[] = [
   },
 ];
 
-// Nearby driver locations for map display (around Nassau)
-export const NEARBY_DRIVERS: Location[] = [
-  { latitude: 25.048, longitude: -77.345 },
-  { latitude: 25.055, longitude: -77.355 },
-  { latitude: 25.042, longitude: -77.338 },
-  { latitude: 25.065, longitude: -77.36 },
-  { latitude: 25.07, longitude: -77.34 },
-  { latitude: 25.058, longitude: -77.37 },
-];
+export const NEARBY_DRIVERS: Location[] = getNearbyDriversForIsland("nassau");

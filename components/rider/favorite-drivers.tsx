@@ -4,7 +4,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useApp } from "@/lib/app-context";
-import { ISLAND_LABELS } from "@/lib/types";
+import { getIslandShortLabel } from "@/lib/types";
 import type { FavoriteDriver } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 
@@ -68,7 +68,7 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
           <View style={styles.metaRow}>
             <IconSymbol name="star.fill" size={12} color={colors.warning} />
             <Text style={[styles.rating, { color: colors.muted }]}>{item.rating.toFixed(1)}</Text>
-            <Text style={[styles.dot, { color: colors.border }]}> Â· </Text>
+            <Text style={[styles.dot, { color: colors.border }]}> · </Text>
             <View style={[styles.typeBadge, { backgroundColor: item.driverType === "taxi" ? GOLD + "15" : colors.primary + "12" }]}>
               <Text style={[styles.typeText, { color: item.driverType === "taxi" ? GOLD : colors.primary }]}>
                 {item.driverType === "taxi" ? "Taxi" : "Rideshare"}
@@ -103,7 +103,7 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
         <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
         <View style={styles.stat}>
           <Text style={[styles.statValue, { color: colors.foreground }]}>
-            {ISLAND_LABELS[item.island].split("/")[0].trim()}
+            {getIslandShortLabel(item.island)}
           </Text>
           <Text style={[styles.statLabel, { color: colors.muted }]}>island</Text>
         </View>

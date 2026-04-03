@@ -9,7 +9,11 @@ import EarningsDashboard from "@/components/driver/earnings-dashboard";
 import RideOptions from "@/components/rider/ride-options";
 import RideTracking from "@/components/rider/ride-tracking";
 import RideComplete from "@/components/rider/ride-complete";
-import { POPULAR_DESTINATIONS, createMockActiveRide } from "@/lib/mock-data";
+import {
+  createMockActiveRide,
+  findDestinationByNameOrAddress,
+  getCurrentLocationForIsland,
+} from "@/lib/mock-data";
 import type { RideType, ActiveRide, PopularDestination } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 
@@ -25,15 +29,12 @@ export default function ActivityScreen() {
   const [activeRide, setActiveRide] = useState<ActiveRide | null>(null);
 
   const handleRebook = useCallback((pickup: string, dropoff: string) => {
-    // Find a matching destination or create a synthetic one
-    const dest = POPULAR_DESTINATIONS.find(
-      (d) => d.name === dropoff || d.address?.includes(dropoff)
-    ) || {
+    const dest = findDestinationByNameOrAddress(dropoff, state.island) || {
       id: "rebook",
       name: dropoff,
       address: pickup,
       icon: "mappin.and.ellipse",
-      location: { latitude: 25.0781, longitude: -77.3431, name: dropoff },
+      location: { ...getCurrentLocationForIsland(state.island), name: dropoff, address: pickup },
       island: state.island,
     };
     setRebookDest(dest);
@@ -44,15 +45,16 @@ export default function ActivityScreen() {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setRebookView("matching");
     setTimeout(() => {
-      const ride = createMockActiveRide(true);
-      ride.status = "driver_en_route";
-      if (rebookDest) {
-        ride.dropoff = rebookDest.location;
-      }
+      const ride = createMockActiveRide({
+        isRider: true,
+        island: state.island,
+        dropoff: rebookDest?.location,
+        rideType: selectedRideType,
+      });
       setActiveRide(ride);
       setRebookView("tracking");
     }, 3000);
-  }, [rebookDest]);
+  }, [rebookDest, selectedRideType, state.island]);
 
   const handleCompleteRide = useCallback(() => {
     if (activeRide) {

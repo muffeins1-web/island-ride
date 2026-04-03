@@ -1,6 +1,22 @@
 // ============================================================
-// IslandRide — Core Data Types
+// IslandRide - Core Data Types
 // ============================================================
+
+import {
+  ISLAND_COORDS,
+  ISLAND_LABELS,
+  ISLAND_OPTIONS,
+  getIslandShortLabel,
+  type Island,
+} from "./islands";
+
+export {
+  ISLAND_COORDS,
+  ISLAND_LABELS,
+  ISLAND_OPTIONS,
+  getIslandShortLabel,
+  type Island,
+};
 
 export type UserRole = "rider" | "driver";
 
@@ -16,38 +32,6 @@ export type RideStatus =
   | "cancelled";
 
 export type DriverStatus = "offline" | "online" | "on_trip";
-
-export type Island =
-  | "nassau"
-  | "grand_bahama"
-  | "exumas"
-  | "abaco"
-  | "eleuthera"
-  | "andros"
-  | "bimini"
-  | "long_island";
-
-export const ISLAND_LABELS: Record<Island, string> = {
-  nassau: "Nassau / Paradise Island",
-  grand_bahama: "Grand Bahama",
-  exumas: "The Exumas",
-  abaco: "Abaco",
-  eleuthera: "Eleuthera",
-  andros: "Andros",
-  bimini: "Bimini",
-  long_island: "Long Island",
-};
-
-export const ISLAND_COORDS: Record<Island, { lat: number; lng: number }> = {
-  nassau: { lat: 25.0443, lng: -77.3504 },
-  grand_bahama: { lat: 26.6593, lng: -78.5201 },
-  exumas: { lat: 23.6203, lng: -75.9699 },
-  abaco: { lat: 26.3454, lng: -77.1565 },
-  eleuthera: { lat: 25.1372, lng: -76.1494 },
-  andros: { lat: 24.7, lng: -77.8 },
-  bimini: { lat: 25.7267, lng: -79.2667 },
-  long_island: { lat: 23.1, lng: -75.1 },
-};
 
 export interface Location {
   latitude: number;
@@ -99,8 +83,8 @@ export interface RideRequest {
   dropoff: Location;
   rideType: RideType;
   estimatedFare: number;
-  estimatedDuration: number; // minutes
-  estimatedDistance: number; // km
+  estimatedDuration: number;
+  estimatedDistance: number;
   island: Island;
   createdAt: string;
 }
@@ -123,7 +107,7 @@ export interface ActiveRide {
   estimatedDuration: number;
   estimatedDistance: number;
   driverLocation: Location;
-  eta: number; // minutes
+  eta: number;
   startedAt?: string;
   completedAt?: string;
 }
@@ -206,7 +190,6 @@ export const RIDE_TYPE_CONFIG: Record<
   },
 };
 
-// Base fare in BSD (Bahamian Dollar, pegged 1:1 to USD)
 export const BASE_FARE = 3.5;
 export const PER_KM_RATE = 2.0;
 export const PER_MIN_RATE = 0.35;
@@ -216,7 +199,7 @@ export const MIN_FARE = 7.0;
 export function calculateFare(
   distanceKm: number,
   durationMin: number,
-  rideType: RideType
+  rideType: RideType,
 ): number {
   const config = RIDE_TYPE_CONFIG[rideType];
   const raw =
