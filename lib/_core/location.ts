@@ -191,15 +191,44 @@ export async function watchPosition(
 
 // ─────────────────────────────────────────────
 // Reverse geocoding (coordinates → address)
-// Uses Nominatim (free, no key needed) for now.
-// Swap out with Mapbox geocoding when key is available.
+// Uses Google Maps Geocoding API with the project key.
 // ─────────────────────────────────────────────
+
+const GOOGLE_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? "";
 
 export async function reverseGeocode(
   latitude: number,
   longitude: number
 ): Promise<GeocodeResult | null> {
   try {
+    if (GOOGLE_KEY) {
+      // Google Maps Geocoding API
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.status !== "OK" || !data.results?.length) return null;
+      const result = data.results[0];
+      const components = result.address_components || [];
+      const name =
+        components.find((c: any) => c.types?.includes("point_of_interest"))
+          ?.long_name ||
+        components.find((c: any) => c.types?.includes("premise"))
+          ?.long_name ||
+        components.find((c: any) => c.types?.includes("route"))
+          ?.long_name ||
+        result.formatted_address?.split(",")[0] ||
+        "Current Location";
+      return {
+        name,
+        address: result.formatted_address || "",
+        latitude,
+        longitude,
+        placeId: result.place_id,
+      };
+    }
+
+    // Fallback: Nominatim (no key needed)
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
     const res = await fetch(url, {
       headers: { "User-Agent": "IslandRide/1.0" },
@@ -235,7 +264,7 @@ export async function reverseGeocode(
 
 // ─────────────────────────────────────────────
 // Forward geocoding (address → coordinates)
-// Uses Nominatim restricted to Bahamas bounding box.
+// Uses Google Maps Geocoding API, bounded to the Bahamas.
 // ─────────────────────────────────────────────
 
 export async function geocodeAddress(
@@ -243,7 +272,24 @@ export async function geocodeAddress(
   island?: string
 ): Promise<GeocodeResult[]> {
   try {
-    // Bahamas bounding box: roughly -79.6 to -72.7 lon, 20.9 to 27.3 lat
+    if (GOOGLE_KEY) {
+      // Google Maps Geocoding API with Bahamas bias
+      const bounds = "20.9,-79.6|27.3,-72.7"; // south,west|north,east
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&bounds=${bounds}&components=country:BS&key=${GOOGLE_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      const data = await res.json();
+      if (data.status !== "OK") return [];
+      return (data.results || []).slice(0, 5).map((item: any) => ({
+        name: item.formatted_address?.split(",")[0] || query,
+        address: item.formatted_address || "",
+        latitude: item.geometry.location.lat,
+        longitude: item.geometry.location.lng,
+        placeId: item.place_id,
+      }));
+    }
+
+    // Fallback: Nominatim
     const viewbox = "-79.6,27.3,-72.7,20.9";
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&viewbox=${viewbox}&bounded=1&addressdetails=1`;
     const res = await fetch(url, {
@@ -260,6 +306,42 @@ export async function geocodeAddress(
     }));
   } catch {
     return [];
+  }
+}
+
+// ─────────────────────────────────────────────
+// Google Directions API — route, ETA, distance
+// ─────────────────────────────────────────────
+
+export interface DirectionsResult {
+  distanceMeters: number;
+  durationSeconds: number;
+  distanceKmFormatted: string;
+  durationFormatted: string;
+  polyline: string; // encoded polyline for map rendering
+}
+
+export async function getDirections(
+  origin: { latitude: number; longitude: number },
+  destination: { latitude: number; longitude: number }
+): Promise<DirectionsResult | null> {
+  if (!GOOGLE_KEY) return null;
+  try {
+    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=${GOOGLE_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status !== "OK" || !data.routes?.length) return null;
+    const leg = data.routes[0].legs[0];
+    return {
+      distanceMeters: leg.distance.value,
+      durationSeconds: leg.duration.value,
+      distanceKmFormatted: leg.distance.text,
+      durationFormatted: leg.duration.text,
+      polyline: data.routes[0].overview_polyline.points,
+    };
+  } catch {
+    return null;
   }
 }
 

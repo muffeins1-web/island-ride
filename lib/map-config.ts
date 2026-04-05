@@ -1,30 +1,56 @@
 /**
  * Map configuration for IslandRide
  *
- * Centralizes all map-related config: Mapbox access token,
- * default camera positions per island, map style, etc.
+ * Centralizes all map-related config: Google Maps API key,
+ * default camera positions per island, API endpoints, etc.
  *
- * Mapbox will render real tiles when EXPO_PUBLIC_MAPBOX_KEY is set.
- * Without it, the app falls back to the existing animated mock map.
+ * Google Maps renders on web via the Maps JavaScript API and on
+ * native via react-native-maps (Google provider).
+ * The key comes from EXPO_PUBLIC_GOOGLE_MAPS_KEY in .env.
  */
 
 import { ISLAND_COORDS, type Island } from "./islands";
 
 // ─────────────────────────────────────────────
-// Mapbox access token (public key)
+// Google Maps API key
 // ─────────────────────────────────────────────
 
-export const MAPBOX_ACCESS_TOKEN =
-  process.env.EXPO_PUBLIC_MAPBOX_KEY ?? "";
+export const GOOGLE_MAPS_API_KEY =
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? "";
 
-export const isMapboxAvailable = MAPBOX_ACCESS_TOKEN.length > 0;
+export const isGoogleMapsAvailable = GOOGLE_MAPS_API_KEY.length > 0;
+
+// Legacy alias (some tests reference this)
+export const isMapboxAvailable = isGoogleMapsAvailable;
 
 // ─────────────────────────────────────────────
-// Map style — dark theme matching the app design
+// Google Maps API endpoints
 // ─────────────────────────────────────────────
 
-// Mapbox dark style that matches the IslandRide design system
-export const MAP_STYLE_URL = "mapbox://styles/mapbox/dark-v11";
+export const GOOGLE_MAPS_URLS = {
+  geocode: "https://maps.googleapis.com/maps/api/geocode/json",
+  directions: "https://maps.googleapis.com/maps/api/directions/json",
+  places: "https://maps.googleapis.com/maps/api/place",
+  staticMap: "https://maps.googleapis.com/maps/api/staticmap",
+} as const;
+
+// ─────────────────────────────────────────────
+// Map style — dark theme for web embed
+// ─────────────────────────────────────────────
+
+/** Google Maps dark style JSON matching the IslandRide design system */
+export const GOOGLE_MAPS_DARK_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#0B1120" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0B1120" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#7B8FA3" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1E2D42" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#131D2F" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2A3F5F" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#00D4E4", lightness: -80 }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d7a99" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+] as const;
 
 // ─────────────────────────────────────────────
 // Default camera settings per island

@@ -57,6 +57,9 @@ const config: ExpoConfig = {
       NSLocationAlwaysAndWhenInUseUsageDescription:
         "IslandRide needs your location to track your trip and provide real-time driver updates.",
     },
+    config: {
+      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY || "",
+    },
   },
   android: {
     adaptiveIcon: {
@@ -88,6 +91,11 @@ const config: ExpoConfig = {
         category: ["BROWSABLE", "DEFAULT"],
       },
     ],
+    config: {
+      googleMaps: {
+        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY || "",
+      },
+    },
   },
   web: {
     bundler: "metro",
@@ -130,13 +138,8 @@ const config: ExpoConfig = {
         },
       },
     ],
-    [
-      "@rnmapbox/maps",
-      {
-        // Use RNMAPBOX_MAPS_DOWNLOAD_TOKEN env var (not the deprecated inline token)
-        RNMapboxMapsVersion: "11.0.0",
-      },
-    ],
+    // Google Maps is configured via android.config.googleMaps and ios.config in the platform sections above.
+    // The Google Maps API key is read from EXPO_PUBLIC_GOOGLE_MAPS_KEY env var.
     [
       "expo-location",
       {
