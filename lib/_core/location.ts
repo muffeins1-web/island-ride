@@ -243,8 +243,8 @@ export async function geocodeAddress(
   island?: string
 ): Promise<GeocodeResult[]> {
   try {
-    // Bahamas bounding box: roughly -80.6 to -72.7 lon, 20.9 to 27.3 lat
-    const viewbox = "-80.6,27.3,-72.7,20.9";
+    // Bahamas bounding box: roughly -79.6 to -72.7 lon, 20.9 to 27.3 lat
+    const viewbox = "-79.6,27.3,-72.7,20.9";
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&viewbox=${viewbox}&bounded=1&addressdetails=1`;
     const res = await fetch(url, {
       headers: { "User-Agent": "IslandRide/1.0" },

@@ -8,7 +8,7 @@
  * Without it, the app falls back to the existing animated mock map.
  */
 
-import { ISLAND_COORDS, type Island } from "@/lib/islands";
+import { ISLAND_COORDS, type Island } from "./islands";
 
 // ─────────────────────────────────────────────
 // Mapbox access token (public key)
@@ -88,7 +88,7 @@ export const BAHAMAS_BOUNDS = {
   north: 27.3,
   south: 20.9,
   east: -72.7,
-  west: -80.6,
+  west: -79.6,
 } as const;
 
 /** Check if coordinates are within the Bahamas */
