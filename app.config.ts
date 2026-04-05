@@ -50,9 +50,13 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
-    "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+      NSLocationWhenInUseUsageDescription:
+        "IslandRide needs your location to find nearby drivers and provide accurate pickup points.",
+      NSLocationAlwaysAndWhenInUseUsageDescription:
+        "IslandRide needs your location to track your trip and provide real-time driver updates.",
+    },
   },
   android: {
     adaptiveIcon: {
@@ -64,7 +68,13 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    permissions: ["POST_NOTIFICATIONS"],
+    permissions: [
+      "POST_NOTIFICATIONS",
+      "ACCESS_FINE_LOCATION",
+      "ACCESS_COARSE_LOCATION",
+      "FOREGROUND_SERVICE",
+      "FOREGROUND_SERVICE_LOCATION",
+    ],
     intentFilters: [
       {
         action: "VIEW",
@@ -119,6 +129,19 @@ const config: ExpoConfig = {
           minSdkVersion: 24,
         },
       },
+    ],
+    [
+      "@rnmapbox/maps",
+      {
+        // Use RNMAPBOX_MAPS_DOWNLOAD_TOKEN env var (not the deprecated inline token)
+        RNMapboxMapsVersion: "11.0.0",
+      },
+    ],
+    [
+      "expo-location",
+      {
+        locationAlwaysAndWhenInUsePermission: "Allow IslandRide to use your location for accurate pickup and route tracking."
+      }
     ],
   ],
   experiments: {
