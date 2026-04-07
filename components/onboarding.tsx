@@ -8,6 +8,7 @@ import {
   Platform,
   Dimensions,
   ScrollView,
+  ImageBackground,
 } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -16,28 +17,38 @@ import { useApp } from "@/lib/app-context";
 import { ISLAND_LABELS } from "@/lib/types";
 import type { Island, UserRole } from "@/lib/types";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 
 const GOLD = "#D4A853";
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const TURQUOISE = "#00B4C5";
+const SAND = "#F5EDE3";
+const OCEAN_DARK = "#0A4D68";
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+const WELCOME_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663029561572/EDxhXSUho2ibhDsxCXss7y/welcome-bg-dHkbNLA2nycN64qyJCVrmP.webp";
+const WELCOME_HERO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663029561572/EDxhXSUho2ibhDsxCXss7y/welcome-hero-nnC69Wf6iopcsTcG6fzaBf.webp";
 
 const ONBOARDING_PAGES = [
   {
     icon: "car.fill" as const,
     title: "Welcome to IslandRide",
     subtitle: "Your local way to get around the islands.\nBy Bahamians, for Bahamians.",
-    color: "#00D4E4",
+    color: TURQUOISE,
+    bgImage: WELCOME_HERO,
   },
   {
     icon: "person.2.fill" as const,
     title: "Ride or Drive",
     subtitle: "Book a ride as a passenger, or earn\nby driving — switch anytime.",
     color: GOLD,
+    bgImage: WELCOME_BG,
   },
   {
     icon: "location.fill" as const,
     title: "Island to Island",
     subtitle: "Serving Nassau, Grand Bahama,\nExumas, Eleuthera, and beyond.",
     color: "#34D399",
+    bgImage: WELCOME_BG,
   },
 ];
 
@@ -221,102 +232,194 @@ export default function Onboarding({ onComplete }: Props) {
 
   // ── Intro pages ──
   const currentPage = ONBOARDING_PAGES[page];
+  const isFirstPage = page === 0;
+
   return (
-    <ScreenContainer edges={["top", "bottom", "left", "right"]}>
-      <View style={styles.pageContainer}>
-        {/* Skip */}
-        <Pressable
-          onPress={() => setPage(ONBOARDING_PAGES.length)}
-          style={({ pressed }) => [styles.skipBtn, pressed && { opacity: 0.6 }]}
-        >
-          <Text style={[styles.skipBtnText, { color: colors.muted }]}>Skip</Text>
-        </Pressable>
+    <View style={styles.fullScreen}>
+      {/* Background image */}
+      <Image
+        source={{ uri: currentPage.bgImage }}
+        style={StyleSheet.absoluteFillObject}
+        contentFit="cover"
+        transition={400}
+      />
 
-        {/* Icon */}
-        <View style={styles.iconArea}>
-          <View style={[styles.iconRingOuter, { borderColor: currentPage.color + "15" }]}>
-            <View style={[styles.iconRingMiddle, { borderColor: currentPage.color + "25" }]}>
-              <View style={[styles.iconCircle, { backgroundColor: currentPage.color }]}>
-                <IconSymbol name={currentPage.icon} size={38} color="#fff" />
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Text */}
-        <View style={styles.textArea}>
-          <Text style={[styles.pageTitle, { color: colors.foreground }]}>{currentPage.title}</Text>
-          <Text style={[styles.pageSubtitle, { color: colors.muted }]}>{currentPage.subtitle}</Text>
-        </View>
-
-        {/* Dots */}
-        <View style={styles.dotsRow}>
-          {ONBOARDING_PAGES.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor: i === page ? colors.primary : colors.border,
-                  width: i === page ? 24 : 8,
-                },
-              ]}
-            />
-          ))}
-        </View>
-
-        {/* Next */}
-        <Pressable
-          onPress={handleNext}
-          style={({ pressed }) => [
-            styles.nextBtn,
-            { backgroundColor: colors.primary },
-            pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
-          ]}
-        >
-          <Text style={styles.nextBtnText}>
-            {page === ONBOARDING_PAGES.length - 1 ? "Get Started" : "Next"}
-          </Text>
-          <IconSymbol name="chevron.right" size={18} color="#fff" />
-        </Pressable>
+      {/* Gradient overlay — lighter at top, darker at bottom for text readability */}
+      <View style={styles.gradientOverlay}>
+        <View style={styles.gradientTop} />
+        <View style={styles.gradientBottom} />
       </View>
-    </ScreenContainer>
+
+      {/* Content */}
+      <View style={styles.pageContainer}>
+        {/* Skip button */}
+        <View style={styles.topBar}>
+          <View style={{ width: 60 }} />
+          <View style={styles.logoArea}>
+            <View style={[styles.logoIcon, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+              <IconSymbol name="car.fill" size={16} color="#fff" />
+            </View>
+            <Text style={styles.logoText}>IslandRide</Text>
+          </View>
+          <Pressable
+            onPress={() => setPage(ONBOARDING_PAGES.length)}
+            style={({ pressed }) => [styles.skipBtn, pressed && { opacity: 0.6 }]}
+          >
+            <Text style={styles.skipBtnText}>Skip</Text>
+          </Pressable>
+        </View>
+
+        {/* Spacer pushes content to bottom */}
+        <View style={{ flex: 1 }} />
+
+        {/* Bottom content area */}
+        <View style={styles.bottomContent}>
+          {/* Icon badge */}
+          <View style={[styles.iconBadge, { backgroundColor: currentPage.color }]}>
+            <IconSymbol name={currentPage.icon} size={24} color="#fff" />
+          </View>
+
+          {/* Title and subtitle */}
+          <Text style={styles.pageTitle}>{currentPage.title}</Text>
+          <Text style={styles.pageSubtitle}>{currentPage.subtitle}</Text>
+
+          {/* Dots */}
+          <View style={styles.dotsRow}>
+            {ONBOARDING_PAGES.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor: i === page ? "#fff" : "rgba(255,255,255,0.4)",
+                    width: i === page ? 24 : 8,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+
+          {/* Next button */}
+          <Pressable
+            onPress={handleNext}
+            style={({ pressed }) => [
+              styles.nextBtn,
+              { backgroundColor: "#fff" },
+              pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
+            ]}
+          >
+            <Text style={[styles.nextBtnText, { color: OCEAN_DARK }]}>
+              {page === ONBOARDING_PAGES.length - 1 ? "Get Started" : "Continue"}
+            </Text>
+            <IconSymbol name="chevron.right" size={18} color={OCEAN_DARK} />
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  pageContainer: { flex: 1, paddingHorizontal: 24, paddingBottom: 32 },
-  skipBtn: { alignSelf: "flex-end", paddingVertical: 12, paddingHorizontal: 4 },
-  skipBtnText: { fontSize: 16, fontWeight: "500" },
-  iconArea: { alignItems: "center", justifyContent: "center", height: 180, marginTop: 12 },
-  iconRingOuter: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    borderWidth: 2,
+  fullScreen: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "space-between",
+  },
+  gradientTop: {
+    height: "35%",
+    backgroundColor: "rgba(0,0,0,0.05)",
+  },
+  gradientBottom: {
+    height: "55%",
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  pageContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === "web" ? 16 : 52,
+    paddingBottom: Platform.OS === "web" ? 24 : 40,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  logoArea: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  logoIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
-  iconRingMiddle: {
-    width: 136,
-    height: 136,
-    borderRadius: 68,
-    borderWidth: 2,
+  logoText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+    letterSpacing: 0.5,
+  },
+  skipBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    minWidth: 60,
+    alignItems: "center",
+  },
+  skipBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.9)",
+  },
+  bottomContent: {
+    alignItems: "center",
+    gap: 12,
+  },
+  iconBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  iconCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    alignItems: "center",
-    justifyContent: "center",
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    textAlign: "center",
+    color: "#fff",
+    letterSpacing: -0.3,
   },
-  textArea: { alignItems: "center", marginBottom: 24, marginTop: 20, minHeight: 100 },
-  pageTitle: { fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 10, color: "#ECEDEE" },
-  pageSubtitle: { fontSize: 16, textAlign: "center", lineHeight: 24 },
-  dotsRow: { flexDirection: "row", alignSelf: "center", gap: 6, marginBottom: 32 },
-  dot: { height: 8, borderRadius: 4 },
+  pageSubtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    lineHeight: 24,
+    color: "rgba(255,255,255,0.85)",
+    marginBottom: 4,
+  },
+  dotsRow: {
+    flexDirection: "row",
+    alignSelf: "center",
+    gap: 6,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  dot: {
+    height: 8,
+    borderRadius: 4,
+  },
   nextBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -324,9 +427,18 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 16,
     borderRadius: 16,
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  nextBtnText: { color: "#fff", fontSize: 17, fontWeight: "700" },
-  // Setup
+  nextBtnText: {
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  // Setup page styles
   setupContainer: { flex: 1 },
   setupContent: { paddingHorizontal: 24, paddingBottom: 40, paddingTop: 16 },
   setupTitle: { fontSize: 28, fontWeight: "800", marginBottom: 6 },

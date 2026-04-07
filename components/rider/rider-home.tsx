@@ -204,17 +204,17 @@ export default function RiderHome() {
     }
   }, [view, pulseAnim]);
 
-  // ── Ride Complete ──
+  // ââ Ride Complete ââ
   if (view === "complete" && activeRide) {
     return <RideComplete ride={activeRide} onDone={handleDone} />;
   }
 
-  // ── Ride Tracking ──
+  // ââ Ride Tracking ââ
   if (view === "tracking" && activeRide) {
     return <RideTracking ride={activeRide} onComplete={handleCompleteRide} />;
   }
 
-  // ── Driver Found ──
+  // ââ Driver Found ââ
   if (view === "driver_found" && activeRide) {
     const isPremium = activeRide.rideType === "premium";
     return (
@@ -244,7 +244,7 @@ export default function RiderHome() {
                   <Text style={[styles.driverFoundRating, { color: colors.muted }]}>
                     {activeRide.driverRating.toFixed(1)}
                   </Text>
-                  <Text style={[{ color: colors.border }]}> � </Text>
+                  <Text style={[{ color: colors.border }]}> · </Text>
                   <Text style={[styles.driverFoundTrips, { color: colors.muted }]}>
                     {200 + Math.floor(Math.random() * 800)} trips
                   </Text>
@@ -336,7 +336,7 @@ export default function RiderHome() {
     );
   }
 
-  // ── Matching Animation ──
+  // ââ Matching Animation ââ
   if (view === "matching") {
     return (
       <ScreenContainer>
@@ -411,7 +411,7 @@ export default function RiderHome() {
     );
   }
 
-  // ── Ride Options ──
+  // ââ Ride Options ââ
   if (view === "options" && selectedDestination) {
     return (
       <RideOptions
@@ -424,7 +424,7 @@ export default function RiderHome() {
     );
   }
 
-  // ── Search View ──
+  // ââ Search View ââ
   if (view === "search") {
     return (
       <ScreenContainer className="px-5 pt-2">
@@ -588,7 +588,7 @@ export default function RiderHome() {
                 <View style={styles.destInfo}>
                   <Text style={[styles.destName, { color: colors.foreground }]}>{item.name}</Text>
                   <Text style={[styles.destAddr, { color: colors.muted }]}>
-                    {item.address}{isOtherIsland ? " � " + ISLAND_LABELS[item.island] : ""}
+                    {item.address}{isOtherIsland ? " · " + ISLAND_LABELS[item.island] : ""}
                   </Text>
                 </View>
                 <View style={styles.destMeta}>
@@ -610,7 +610,7 @@ export default function RiderHome() {
     );
   }
 
-  // ── Home View ──
+  // ââ Home View ââ
   const driverCount = nearbyDrivers.length;
   return (
     <ScreenContainer>

@@ -6,16 +6,26 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 const GOLD = "#D4A853";
 const CORAL = "#E8735A";
 
+// Bahamas-inspired palette
+const OCEAN_DEEP = "#0B4F6C";
+const OCEAN_MID = "#1A7A8A";
+const OCEAN_SHALLOW = "#3DC1C9";
+const OCEAN_SHORE = "#7DE8E0";
+const LAND_GREEN = "#4A8B6E";
+const LAND_LIGHT = "#6BAF8E";
+const SAND_BEACH = "#E8D5B7";
+const SAND_LIGHT = "#F2E6D0";
+
 // ── Types ──
 export type MapMode = "idle" | "searching" | "driver_approaching" | "trip_in_progress";
 
 export interface MapMarker {
   id: string;
   type: "driver" | "pickup" | "dropoff" | "rider";
-  x: number; // 0-100 percentage
-  y: number; // 0-100 percentage
+  x: number;
+  y: number;
   label?: string;
-  rotation?: number; // degrees for car direction
+  rotation?: number;
 }
 
 export interface IslandMapProps {
@@ -28,46 +38,52 @@ export interface IslandMapProps {
   driverCount?: number;
   pickupLabel?: string;
   dropoffLabel?: string;
-  routeProgress?: number; // 0-1
+  routeProgress?: number;
   children?: React.ReactNode;
 }
 
-// ── Simulated road network for Nassau ──
+// ── Realistic road network ──
 const ROADS = {
   major: [
-    // Bay Street (main east-west)
-    { x1: 5, y1: 48, x2: 95, y2: 48, width: 4 },
-    // JFK Drive
-    { x1: 30, y1: 20, x2: 30, y2: 80, width: 3.5 },
-    // East Street
-    { x1: 55, y1: 15, x2: 55, y2: 85, width: 3.5 },
-    // Shirley Street
-    { x1: 10, y1: 35, x2: 90, y2: 35, width: 3 },
-    // Robinson Road
-    { x1: 15, y1: 62, x2: 85, y2: 62, width: 3 },
+    { x1: 5, y1: 48, x2: 95, y2: 48, width: 3.5 },
+    { x1: 30, y1: 20, x2: 30, y2: 80, width: 3 },
+    { x1: 55, y1: 15, x2: 55, y2: 85, width: 3 },
+    { x1: 10, y1: 35, x2: 90, y2: 35, width: 2.5 },
+    { x1: 15, y1: 62, x2: 85, y2: 62, width: 2.5 },
   ],
   minor: [
-    // Vertical streets
     { x1: 15, y1: 25, x2: 15, y2: 75 },
     { x1: 42, y1: 20, x2: 42, y2: 78 },
     { x1: 68, y1: 18, x2: 68, y2: 82 },
     { x1: 82, y1: 22, x2: 82, y2: 76 },
-    // Horizontal streets
     { x1: 8, y1: 28, x2: 92, y2: 28 },
     { x1: 12, y1: 55, x2: 88, y2: 55 },
     { x1: 10, y1: 72, x2: 90, y2: 72 },
-    // Diagonal (Paradise Island bridge)
     { x1: 60, y1: 20, x2: 78, y2: 10 },
   ],
 };
 
-// ── Water areas (ocean/harbor) ──
+// ── Ocean areas ──
 const WATER_AREAS = [
-  { x: 0, y: 0, w: 100, h: 8 },    // North shore
-  { x: 65, y: 5, w: 35, h: 12 },    // Paradise Island channel
+  { x: 0, y: 0, w: 100, h: 10, color: OCEAN_DEEP },
+  { x: 0, y: 0, w: 40, h: 6, color: OCEAN_MID },
+  { x: 60, y: 3, w: 40, h: 14, color: OCEAN_MID },
+  { x: 0, y: 85, w: 100, h: 15, color: OCEAN_DEEP + "60" },
 ];
 
-// ── Block areas (buildings/land) ──
+// ── Shoreline / shallow water ──
+const SHORE_AREAS = [
+  { x: 0, y: 8, w: 100, h: 4, color: OCEAN_SHORE + "40" },
+  { x: 55, y: 14, w: 30, h: 3, color: OCEAN_SHORE + "30" },
+];
+
+// ── Beach areas ──
+const BEACH_AREAS = [
+  { x: 0, y: 10, w: 100, h: 3, color: SAND_BEACH + "50" },
+  { x: 60, y: 16, w: 25, h: 2, color: SAND_BEACH + "40" },
+];
+
+// ── Land blocks (buildings/vegetation) ──
 const BLOCKS = [
   { x: 8, y: 30, w: 18, h: 15 },
   { x: 33, y: 22, w: 16, h: 12 },
@@ -81,7 +97,15 @@ const BLOCKS = [
   { x: 84, y: 45, w: 12, h: 10 },
 ];
 
-// ── Nearby driver positions (idle state) ──
+// ── Green areas (parks/vegetation) ──
+const GREEN_AREAS = [
+  { x: 20, y: 25, w: 8, h: 6 },
+  { x: 60, y: 50, w: 6, h: 5 },
+  { x: 75, y: 70, w: 10, h: 7 },
+  { x: 10, y: 55, w: 5, h: 4 },
+];
+
+// ── Driver positions ──
 const IDLE_DRIVER_POSITIONS = [
   { x: 22, y: 32, rotation: 45 },
   { x: 48, y: 26, rotation: -30 },
@@ -145,7 +169,7 @@ export default function IslandMap({
     }
   }, [mode, searchPulseAnim]);
 
-  // ── Driver idle movement (subtle drift) ──
+  // ── Driver idle movement ──
   useEffect(() => {
     if (mode === "idle" || mode === "searching") {
       const animations = driverAnims.map((anim) => {
@@ -236,12 +260,10 @@ export default function IslandMap({
     }
   }, [showRoute, routeAnim]);
 
-  // Route points (pickup → dropoff path)
   const pickupPos = { x: 38, y: 52 };
   const dropoffPos = { x: 75, y: 25 };
   const riderPos = { x: 50, y: 50 };
 
-  // Driver approaching interpolation
   const approachDriverX = driverApproachAnim.interpolate({
     inputRange: [0, 0.3, 0.6, 1],
     outputRange: [22, 30, 35, pickupPos.x],
@@ -251,7 +273,6 @@ export default function IslandMap({
     outputRange: [32, 38, 45, pickupPos.y],
   });
 
-  // Trip in progress driver interpolation
   const tripDriverX = tripProgressAnim.interpolate({
     inputRange: [0, 0.2, 0.5, 0.8, 1],
     outputRange: [pickupPos.x, 45, 55, 68, dropoffPos.x],
@@ -270,17 +291,17 @@ export default function IslandMap({
     outputRange: [1, 1.6],
   });
 
-  const mapBg = colors.background;
-  const waterColor = colors.primary + "12";
-  const roadMajorColor = colors.border + "50";
-  const roadMinorColor = colors.border + "30";
-  const blockColor = colors.surface;
+  // Premium Bahamas map colors
+  const mapBg = "#E8F4F0"; // Soft sage-green land base
+  const roadMajorColor = "#C8D6D2";
+  const roadMinorColor = "#D8E2DE";
+  const blockColor = "#D5E3DD";
   const routeColor = colors.primary;
   const routeBgColor = colors.primary + "20";
 
   return (
     <View style={[styles.container, { backgroundColor: mapBg }]}>
-      {/* Water areas */}
+      {/* Ocean areas */}
       {WATER_AREAS.map((area, i) => (
         <View
           key={`water-${i}`}
@@ -291,7 +312,41 @@ export default function IslandMap({
               top: `${area.y}%` as any,
               width: `${area.w}%` as any,
               height: `${area.h}%` as any,
-              backgroundColor: waterColor,
+              backgroundColor: area.color,
+            },
+          ]}
+        />
+      ))}
+
+      {/* Shoreline */}
+      {SHORE_AREAS.map((area, i) => (
+        <View
+          key={`shore-${i}`}
+          style={[
+            styles.waterArea,
+            {
+              left: `${area.x}%` as any,
+              top: `${area.y}%` as any,
+              width: `${area.w}%` as any,
+              height: `${area.h}%` as any,
+              backgroundColor: area.color,
+            },
+          ]}
+        />
+      ))}
+
+      {/* Beach */}
+      {BEACH_AREAS.map((area, i) => (
+        <View
+          key={`beach-${i}`}
+          style={[
+            styles.waterArea,
+            {
+              left: `${area.x}%` as any,
+              top: `${area.y}%` as any,
+              width: `${area.w}%` as any,
+              height: `${area.h}%` as any,
+              backgroundColor: area.color,
             },
           ]}
         />
@@ -309,7 +364,23 @@ export default function IslandMap({
               width: `${block.w}%` as any,
               height: `${block.h}%` as any,
               backgroundColor: blockColor,
-              borderColor: colors.border + "20",
+              borderColor: "#C0D0CA",
+            },
+          ]}
+        />
+      ))}
+
+      {/* Green areas */}
+      {GREEN_AREAS.map((area, i) => (
+        <View
+          key={`green-${i}`}
+          style={[
+            styles.greenArea,
+            {
+              left: `${area.x}%` as any,
+              top: `${area.y}%` as any,
+              width: `${area.w}%` as any,
+              height: `${area.h}%` as any,
             },
           ]}
         />
@@ -342,15 +413,28 @@ export default function IslandMap({
           );
         }
 
-        return (
+        return isVertical ? (
           <View
             key={`minor-${i}`}
             style={[
-              isVertical ? styles.roadV : styles.roadH,
+              styles.roadV,
+              {
+                left: `${road.x1}%` as any,
+                top: `${Math.min(road.y1, road.y2)}%` as any,
+                height: `${Math.abs(road.y2 - road.y1)}%` as any,
+                backgroundColor: roadMinorColor,
+              },
+            ]}
+          />
+        ) : (
+          <View
+            key={`minor-${i}`}
+            style={[
+              styles.roadH,
               {
                 left: `${Math.min(road.x1, road.x2)}%` as any,
-                top: `${Math.min(road.y1, road.y2)}%` as any,
-                [isVertical ? "height" : "width"]: `${Math.abs(isVertical ? road.y2 - road.y1 : road.x2 - road.x1)}%` as any,
+                top: `${road.y1}%` as any,
+                width: `${Math.abs(road.x2 - road.x1)}%` as any,
                 backgroundColor: roadMinorColor,
               },
             ]}
@@ -361,82 +445,89 @@ export default function IslandMap({
       {/* Major roads */}
       {ROADS.major.map((road, i) => {
         const isVertical = Math.abs(road.x2 - road.x1) < Math.abs(road.y2 - road.y1);
-        return (
+        return isVertical ? (
           <View
             key={`major-${i}`}
             style={[
-              isVertical ? styles.roadV : styles.roadH,
+              styles.roadV,
+              {
+                left: `${road.x1}%` as any,
+                top: `${Math.min(road.y1, road.y2)}%` as any,
+                height: `${Math.abs(road.y2 - road.y1)}%` as any,
+                width: road.width,
+                backgroundColor: roadMajorColor,
+              },
+            ]}
+          />
+        ) : (
+          <View
+            key={`major-${i}`}
+            style={[
+              styles.roadH,
               {
                 left: `${Math.min(road.x1, road.x2)}%` as any,
-                top: `${Math.min(road.y1, road.y2)}%` as any,
-                [isVertical ? "height" : "width"]: `${Math.abs(isVertical ? road.y2 - road.y1 : road.x2 - road.x1)}%` as any,
+                top: `${road.y1}%` as any,
+                width: `${Math.abs(road.x2 - road.x1)}%` as any,
+                height: road.width,
                 backgroundColor: roadMajorColor,
-                height: isVertical ? undefined : road.width || 2,
-                width: isVertical ? road.width || 2 : undefined,
               },
             ]}
           />
         );
       })}
 
-      {/* Route line (pickup → dropoff) */}
+      {/* Route line */}
       {showRoute && (
         <>
-          {/* Route background (full path) */}
-          <View
+          {/* Route background */}
+          <Animated.View
             style={[
               styles.routeLine,
               {
                 left: `${pickupPos.x}%` as any,
                 top: `${pickupPos.y}%` as any,
-                width: `${Math.abs(dropoffPos.x - pickupPos.x) * 1.2}%` as any,
+                width: routeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["0%", `${Math.sqrt(Math.pow(dropoffPos.x - pickupPos.x, 2) + Math.pow(dropoffPos.y - pickupPos.y, 2))}%`],
+                }),
                 backgroundColor: routeBgColor,
-                transform: [{ rotate: "-35deg" }],
-                transformOrigin: "left center",
+                transform: [
+                  {
+                    rotate: `${Math.atan2(dropoffPos.y - pickupPos.y, dropoffPos.x - pickupPos.x) * (180 / Math.PI)}deg`,
+                  },
+                ],
               },
             ]}
           />
-          {/* Route dots (animated path) */}
-          {[0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((t, i) => {
-            const dotX = pickupPos.x + (dropoffPos.x - pickupPos.x) * t;
-            const dotY = pickupPos.y + (dropoffPos.y - pickupPos.y) * t;
-            return (
-              <View
-                key={`dot-${i}`}
-                style={[
-                  styles.routeDot,
+          {/* Route foreground */}
+          <Animated.View
+            style={[
+              styles.routeLine,
+              {
+                left: `${pickupPos.x}%` as any,
+                top: `${pickupPos.y}%` as any,
+                width: routeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["0%", `${Math.sqrt(Math.pow(dropoffPos.x - pickupPos.x, 2) + Math.pow(dropoffPos.y - pickupPos.y, 2))}%`],
+                }),
+                backgroundColor: routeColor,
+                height: 3,
+                transform: [
                   {
-                    left: `${dotX}%` as any,
-                    top: `${dotY}%` as any,
-                    backgroundColor: routeColor,
-                    opacity: routeProgress > t ? 1 : 0.3,
+                    rotate: `${Math.atan2(dropoffPos.y - pickupPos.y, dropoffPos.x - pickupPos.x) * (180 / Math.PI)}deg`,
                   },
-                ]}
-              />
-            );
-          })}
-          {/* Active route overlay */}
-          {routeProgress > 0 && (
-            <View
-              style={[
-                styles.routeLine,
-                {
-                  left: `${pickupPos.x}%` as any,
-                  top: `${pickupPos.y}%` as any,
-                  width: `${Math.abs(dropoffPos.x - pickupPos.x) * 1.2 * routeProgress}%` as any,
-                  backgroundColor: routeColor,
-                  transform: [{ rotate: "-35deg" }],
-                  transformOrigin: "left center",
-                },
-              ]}
-            />
-          )}
+                ],
+              },
+            ]}
+          />
+          {/* Route dots */}
+          <View style={[styles.routeDot, { left: `${pickupPos.x}%` as any, top: `${pickupPos.y}%` as any, backgroundColor: routeColor }]} />
+          <View style={[styles.routeDot, { left: `${dropoffPos.x}%` as any, top: `${dropoffPos.y}%` as any, backgroundColor: GOLD }]} />
         </>
       )}
 
-      {/* Nearby driver markers (idle/searching) */}
+      {/* Driver markers — professional clean style */}
       {showDrivers &&
-        (mode === "idle" || mode === "searching") &&
         IDLE_DRIVER_POSITIONS.slice(0, driverCount).map((pos, i) => (
           <Animated.View
             key={`driver-${i}`}
@@ -451,16 +542,17 @@ export default function IslandMap({
                   inputRange: [-100, 100],
                   outputRange: ["-100%", "100%"],
                 }) as any,
-                backgroundColor: colors.foreground,
+                backgroundColor: "#1A1A2E",
+                borderColor: "#fff",
                 transform: [{ rotate: `${pos.rotation}deg` }],
               },
             ]}
           >
-            <IconSymbol name="car.fill" size={14} color={colors.background} />
+            <IconSymbol name="car.fill" size={14} color="#fff" />
           </Animated.View>
         ))}
 
-      {/* Driver approaching marker */}
+      {/* Approaching driver */}
       {mode === "driver_approaching" && (
         <Animated.View
           style={[
@@ -469,20 +561,21 @@ export default function IslandMap({
               left: approachDriverX.interpolate({
                 inputRange: [0, 100],
                 outputRange: ["0%", "100%"],
-              }),
+              }) as any,
               top: approachDriverY.interpolate({
                 inputRange: [0, 100],
                 outputRange: ["0%", "100%"],
-              }),
+              }) as any,
               backgroundColor: colors.primary,
+              borderColor: "#fff",
             },
           ]}
         >
-          <IconSymbol name="car.fill" size={16} color="#fff" />
+          <IconSymbol name="car.fill" size={18} color="#fff" />
         </Animated.View>
       )}
 
-      {/* Trip in progress driver marker */}
+      {/* Trip in progress driver */}
       {mode === "trip_in_progress" && (
         <Animated.View
           style={[
@@ -491,16 +584,17 @@ export default function IslandMap({
               left: tripDriverX.interpolate({
                 inputRange: [0, 100],
                 outputRange: ["0%", "100%"],
-              }),
+              }) as any,
               top: tripDriverY.interpolate({
                 inputRange: [0, 100],
                 outputRange: ["0%", "100%"],
-              }),
+              }) as any,
               backgroundColor: colors.primary,
+              borderColor: "#fff",
             },
           ]}
         >
-          <View style={[styles.tripDriverGlow, { backgroundColor: colors.primary + "30" }]} />
+          <View style={[styles.tripDriverGlow, { backgroundColor: colors.primary + "25" }]} />
           <IconSymbol name="car.fill" size={16} color="#fff" />
         </Animated.View>
       )}
@@ -541,7 +635,7 @@ export default function IslandMap({
           <View style={[styles.pickupPinStem, { backgroundColor: colors.success }]} />
           <View style={[styles.pickupPinShadow, { backgroundColor: colors.success + "30" }]} />
           {pickupLabel && (
-            <View style={[styles.markerLabel, { backgroundColor: colors.background + "E8" }]}>
+            <View style={[styles.markerLabel, { backgroundColor: "#fff" + "E8" }]}>
               <Text style={[styles.markerLabelText, { color: colors.success }]} numberOfLines={1}>
                 {pickupLabel}
               </Text>
@@ -567,7 +661,7 @@ export default function IslandMap({
           <View style={[styles.dropoffPinStem, { backgroundColor: GOLD }]} />
           <View style={[styles.dropoffPinShadow, { backgroundColor: GOLD + "30" }]} />
           {dropoffLabel && (
-            <View style={[styles.markerLabel, { backgroundColor: colors.background + "E8" }]}>
+            <View style={[styles.markerLabel, { backgroundColor: "#fff" + "E8" }]}>
               <Text style={[styles.markerLabelText, { color: GOLD }]} numberOfLines={1}>
                 {dropoffLabel}
               </Text>
@@ -576,7 +670,7 @@ export default function IslandMap({
         </View>
       )}
 
-      {/* Rider location (pulsing blue dot) */}
+      {/* Rider location */}
       {showRiderLocation && (
         <View
           style={[
@@ -603,7 +697,7 @@ export default function IslandMap({
         </View>
       )}
 
-      {/* Overlay children (badges, chips, etc.) */}
+      {/* Overlay children */}
       {children}
     </View>
   );
@@ -615,21 +709,20 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
   },
-
-  // Water
   waterArea: {
     position: "absolute",
     borderRadius: 2,
   },
-
-  // Blocks
+  greenArea: {
+    position: "absolute",
+    borderRadius: 6,
+    backgroundColor: LAND_GREEN + "25",
+  },
   block: {
     position: "absolute",
     borderRadius: 4,
     borderWidth: 0.5,
   },
-
-  // Roads
   roadH: {
     position: "absolute",
     height: 1.5,
@@ -646,8 +739,6 @@ const styles = StyleSheet.create({
     borderRadius: 1,
     transformOrigin: "left center",
   },
-
-  // Route
   routeLine: {
     position: "absolute",
     height: 4,
@@ -662,25 +753,22 @@ const styles = StyleSheet.create({
     marginLeft: -3,
     marginTop: -3,
   },
-
-  // Driver markers
   driverMarker: {
     position: "absolute",
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: -15,
-    marginTop: -15,
+    marginLeft: -14,
+    marginTop: -14,
+    borderWidth: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     elevation: 4,
   },
-
-  // Approaching driver
   approachingDriver: {
     position: "absolute",
     width: 36,
@@ -690,15 +778,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: -18,
     marginTop: -18,
+    borderWidth: 2.5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
     zIndex: 10,
   },
-
-  // Trip driver
   tripDriver: {
     position: "absolute",
     width: 38,
@@ -708,9 +795,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: -19,
     marginTop: -19,
+    borderWidth: 2.5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
     zIndex: 10,
@@ -721,8 +809,6 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
   },
-
-  // Search pulse
   searchPulse: {
     position: "absolute",
     width: 80,
@@ -732,8 +818,6 @@ const styles = StyleSheet.create({
     marginLeft: -40,
     marginTop: -40,
   },
-
-  // Pickup marker
   pickupMarker: {
     position: "absolute",
     alignItems: "center",
@@ -767,8 +851,6 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     marginTop: 2,
   },
-
-  // Dropoff marker
   dropoffMarker: {
     position: "absolute",
     alignItems: "center",
@@ -796,8 +878,6 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     marginTop: 2,
   },
-
-  // Marker labels
   markerLabel: {
     position: "absolute",
     top: -20,
@@ -812,8 +892,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.3,
   },
-
-  // Rider location
   riderLocation: {
     position: "absolute",
     alignItems: "center",
@@ -840,7 +918,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 3,
   },
