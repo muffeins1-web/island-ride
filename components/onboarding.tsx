@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,19 @@ import {
   Dimensions,
   ScrollView,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  withSpring,
+  withRepeat,
+  withSequence,
+  Easing,
+  interpolate,
+  FadeIn,
+  FadeOut,
+} from "react-native-reanimated";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
@@ -60,6 +73,263 @@ interface Props {
   onComplete: () => void;
 }
 
+// ── Animated intro page component ──
+function AnimatedIntroPage({
+  pageData,
+  pageIndex,
+  currentPage,
+  totalPages,
+  onNext,
+  onSkip,
+}: {
+  pageData: (typeof ONBOARDING_PAGES)[number];
+  pageIndex: number;
+  currentPage: number;
+  totalPages: number;
+  onNext: () => void;
+  onSkip: () => void;
+}) {
+  // Shared values for entrance animations
+  const bgScale = useSharedValue(1.15);
+  const bgTranslateY = useSharedValue(-10);
+  const iconScale = useSharedValue(0);
+  const iconRotate = useSharedValue(-15);
+  const outerRingScale = useSharedValue(0.6);
+  const outerRingOpacity = useSharedValue(0);
+  const innerRingScale = useSharedValue(0.6);
+  const innerRingOpacity = useSharedValue(0);
+  const titleOpacity = useSharedValue(0);
+  const titleTranslateY = useSharedValue(30);
+  const subtitleOpacity = useSharedValue(0);
+  const subtitleTranslateY = useSharedValue(25);
+  const dotsOpacity = useSharedValue(0);
+  const buttonOpacity = useSharedValue(0);
+  const buttonTranslateY = useSharedValue(20);
+  const skipOpacity = useSharedValue(0);
+
+  // Ken Burns — slow continuous zoom and drift
+  const kenBurnsScale = useSharedValue(1.15);
+  const kenBurnsX = useSharedValue(0);
+
+  // Ring pulse animation
+  const ringPulse = useSharedValue(1);
+
+  useEffect(() => {
+    // Reset all values
+    bgScale.value = 1.15;
+    bgTranslateY.value = -10;
+    iconScale.value = 0;
+    iconRotate.value = -15;
+    outerRingScale.value = 0.6;
+    outerRingOpacity.value = 0;
+    innerRingScale.value = 0.6;
+    innerRingOpacity.value = 0;
+    titleOpacity.value = 0;
+    titleTranslateY.value = 30;
+    subtitleOpacity.value = 0;
+    subtitleTranslateY.value = 25;
+    dotsOpacity.value = 0;
+    buttonOpacity.value = 0;
+    buttonTranslateY.value = 20;
+    skipOpacity.value = 0;
+    kenBurnsScale.value = 1.15;
+    kenBurnsX.value = 0;
+
+    // Ken Burns — slow zoom out and drift over 12 seconds
+    kenBurnsScale.value = withTiming(1.02, {
+      duration: 12000,
+      easing: Easing.out(Easing.quad),
+    });
+    kenBurnsX.value = withTiming(pageIndex % 2 === 0 ? -8 : 8, {
+      duration: 12000,
+      easing: Easing.inOut(Easing.quad),
+    });
+
+    // Background fade-in zoom
+    bgScale.value = withTiming(1.0, { duration: 800, easing: Easing.out(Easing.cubic) });
+    bgTranslateY.value = withTiming(0, { duration: 800, easing: Easing.out(Easing.cubic) });
+
+    // Skip button fade in
+    skipOpacity.value = withDelay(200, withTiming(1, { duration: 400 }));
+
+    // Outer ring expand
+    outerRingScale.value = withDelay(200, withTiming(1, { duration: 600, easing: Easing.out(Easing.back(1.2)) }));
+    outerRingOpacity.value = withDelay(200, withTiming(1, { duration: 500 }));
+
+    // Inner ring expand (staggered)
+    innerRingScale.value = withDelay(350, withTiming(1, { duration: 600, easing: Easing.out(Easing.back(1.2)) }));
+    innerRingOpacity.value = withDelay(350, withTiming(1, { duration: 500 }));
+
+    // Icon pop in with spring
+    iconScale.value = withDelay(500, withSpring(1, { damping: 12, stiffness: 150 }));
+    iconRotate.value = withDelay(500, withSpring(0, { damping: 12, stiffness: 120 }));
+
+    // Title slide up + fade in
+    titleOpacity.value = withDelay(650, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }));
+    titleTranslateY.value = withDelay(650, withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) }));
+
+    // Subtitle slide up + fade in (staggered)
+    subtitleOpacity.value = withDelay(800, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }));
+    subtitleTranslateY.value = withDelay(800, withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) }));
+
+    // Dots fade in
+    dotsOpacity.value = withDelay(950, withTiming(1, { duration: 350 }));
+
+    // Button slide up + fade in
+    buttonOpacity.value = withDelay(1050, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }));
+    buttonTranslateY.value = withDelay(1050, withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) }));
+
+    // Ring pulse — gentle breathing loop
+    ringPulse.value = withDelay(
+      1200,
+      withRepeat(
+        withSequence(
+          withTiming(1.06, { duration: 2000, easing: Easing.inOut(Easing.quad) }),
+          withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1,
+        true
+      )
+    );
+  }, [pageIndex]);
+
+  // Animated styles
+  const bgAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: bgScale.value * kenBurnsScale.value },
+      { translateY: bgTranslateY.value },
+      { translateX: kenBurnsX.value },
+    ],
+  }));
+
+  const skipAnimStyle = useAnimatedStyle(() => ({
+    opacity: skipOpacity.value,
+  }));
+
+  const outerRingAnimStyle = useAnimatedStyle(() => ({
+    opacity: outerRingOpacity.value,
+    transform: [{ scale: outerRingScale.value * ringPulse.value }],
+  }));
+
+  const innerRingAnimStyle = useAnimatedStyle(() => ({
+    opacity: innerRingOpacity.value,
+    transform: [{ scale: innerRingScale.value }],
+  }));
+
+  const iconAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: iconScale.value },
+      { rotate: `${iconRotate.value}deg` },
+    ],
+  }));
+
+  const titleAnimStyle = useAnimatedStyle(() => ({
+    opacity: titleOpacity.value,
+    transform: [{ translateY: titleTranslateY.value }],
+  }));
+
+  const subtitleAnimStyle = useAnimatedStyle(() => ({
+    opacity: subtitleOpacity.value,
+    transform: [{ translateY: subtitleTranslateY.value }],
+  }));
+
+  const dotsAnimStyle = useAnimatedStyle(() => ({
+    opacity: dotsOpacity.value,
+  }));
+
+  const buttonAnimStyle = useAnimatedStyle(() => ({
+    opacity: buttonOpacity.value,
+    transform: [{ translateY: buttonTranslateY.value }],
+  }));
+
+  return (
+    <View style={styles.fullScreen}>
+      {/* Animated background image with Ken Burns effect */}
+      <Animated.View style={[StyleSheet.absoluteFillObject, bgAnimStyle]}>
+        <Image
+          source={{ uri: pageData.bgImage }}
+          style={[StyleSheet.absoluteFillObject, { width: SCREEN_WIDTH + 30, height: SCREEN_HEIGHT + 30, left: -15, top: -15 }]}
+          contentFit="cover"
+        />
+      </Animated.View>
+
+      {/* Dark overlay */}
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(11,22,35,0.72)" }]} />
+
+      {/* Content */}
+      <View style={styles.pageContainer}>
+        {/* Skip button */}
+        <View style={styles.topBar}>
+          <View style={{ width: 60 }} />
+          <View style={{ flex: 1 }} />
+          <Animated.View style={skipAnimStyle}>
+            <Pressable
+              onPress={onSkip}
+              style={({ pressed }) => [styles.skipBtn, pressed && { opacity: 0.6 }]}
+            >
+              <Text style={styles.skipBtnText}>Skip</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+
+        {/* Center — icon with animated rings */}
+        <View style={styles.centerArea}>
+          <Animated.View style={[styles.outerRing, outerRingAnimStyle]}>
+            <Animated.View style={[styles.innerRing, innerRingAnimStyle]}>
+              <Animated.View style={[styles.iconCircle, { backgroundColor: pageData.iconColor }, iconAnimStyle]}>
+                <IconSymbol name={pageData.icon} size={36} color="#fff" />
+              </Animated.View>
+            </Animated.View>
+          </Animated.View>
+        </View>
+
+        {/* Bottom content — animated text, dots, button */}
+        <View style={styles.bottomContent}>
+          <Animated.Text style={[styles.pageTitle, titleAnimStyle]}>
+            {pageData.title}
+          </Animated.Text>
+          <Animated.Text style={[styles.pageSubtitle, subtitleAnimStyle]}>
+            {pageData.subtitle}
+          </Animated.Text>
+
+          {/* Animated dots */}
+          <Animated.View style={[styles.dotsRow, dotsAnimStyle]}>
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <Animated.View
+                key={i}
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor: i === currentPage ? CYAN : "rgba(255,255,255,0.25)",
+                    width: i === currentPage ? 24 : 8,
+                  },
+                ]}
+              />
+            ))}
+          </Animated.View>
+
+          {/* Animated button */}
+          <Animated.View style={[{ width: "100%" }, buttonAnimStyle]}>
+            <Pressable
+              onPress={onNext}
+              style={({ pressed }) => [
+                styles.nextBtn,
+                { backgroundColor: CYAN },
+                pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
+              ]}
+            >
+              <Text style={styles.nextBtnText}>
+                {currentPage === totalPages - 1 ? "Get Started" : "Next"}
+              </Text>
+              <IconSymbol name="chevron.right" size={18} color="#fff" />
+            </Pressable>
+          </Animated.View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export default function Onboarding({ onComplete }: Props) {
   const colors = useColors();
   const { dispatch } = useApp();
@@ -88,7 +358,7 @@ export default function Onboarding({ onComplete }: Props) {
     onComplete();
   }, [name, selectedRole, selectedIsland, dispatch, onComplete]);
 
-  // ── Setup page ──
+  // ── Setup page (no animation changes) ──
   if (isSetupPage) {
     const islands = Object.entries(ISLAND_LABELS) as [Island, string][];
     return (
@@ -98,224 +368,171 @@ export default function Onboarding({ onComplete }: Props) {
           contentContainerStyle={styles.setupContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.setupTitle, { color: colors.foreground }]}>Set up your profile</Text>
-          <Text style={[styles.setupSubtitle, { color: colors.muted }]}>
+          <Animated.Text
+            entering={FadeIn.delay(100).duration(400)}
+            style={[styles.setupTitle, { color: colors.foreground }]}
+          >
+            Set up your profile
+          </Animated.Text>
+          <Animated.Text
+            entering={FadeIn.delay(200).duration(400)}
+            style={[styles.setupSubtitle, { color: colors.muted }]}
+          >
             Just a few details to get started
-          </Text>
+          </Animated.Text>
 
           {/* Name */}
-          <Text style={[styles.fieldLabel, { color: colors.muted }]}>YOUR NAME</Text>
-          <View style={[styles.inputBox, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
-            <IconSymbol name="person.fill" size={18} color={colors.muted} />
-            <TextInput
-              style={[styles.input, { color: colors.foreground }]}
-              placeholder="Enter your name"
-              placeholderTextColor={colors.muted}
-              value={name}
-              onChangeText={setName}
-              returnKeyType="done"
-            />
-          </View>
+          <Animated.View entering={FadeIn.delay(300).duration(400)}>
+            <Text style={[styles.fieldLabel, { color: colors.muted }]}>YOUR NAME</Text>
+            <View style={[styles.inputBox, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+              <IconSymbol name="person.fill" size={18} color={colors.muted} />
+              <TextInput
+                style={[styles.input, { color: colors.foreground }]}
+                placeholder="Enter your name"
+                placeholderTextColor={colors.muted}
+                value={name}
+                onChangeText={setName}
+                returnKeyType="done"
+              />
+            </View>
+          </Animated.View>
 
           {/* Role */}
-          <Text style={[styles.fieldLabel, { color: colors.muted }]}>I WANT TO</Text>
-          <View style={styles.roleRow}>
-            <Pressable
-              onPress={() => {
-                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setSelectedRole("rider");
-              }}
-              style={({ pressed }) => [
-                styles.roleCard,
-                {
-                  backgroundColor: selectedRole === "rider" ? TURQUOISE + "12" : colors.surface,
-                  borderColor: selectedRole === "rider" ? TURQUOISE : colors.border,
-                },
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-            >
-              <View style={[styles.roleIconBox, { backgroundColor: TURQUOISE + "18" }]}>
-                <IconSymbol name="person.fill" size={24} color={TURQUOISE} />
-              </View>
-              <Text style={[styles.roleCardTitle, { color: colors.foreground }]}>Ride</Text>
-              <Text style={[styles.roleCardDesc, { color: colors.muted }]}>Get around the islands</Text>
-              {selectedRole === "rider" && (
-                <View style={[styles.roleCheck, { backgroundColor: TURQUOISE }]}>
-                  <IconSymbol name="checkmark" size={12} color="#fff" />
-                </View>
-              )}
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setSelectedRole("driver");
-              }}
-              style={({ pressed }) => [
-                styles.roleCard,
-                {
-                  backgroundColor: selectedRole === "driver" ? GOLD + "12" : colors.surface,
-                  borderColor: selectedRole === "driver" ? GOLD : colors.border,
-                },
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-            >
-              <View style={[styles.roleIconBox, { backgroundColor: GOLD + "18" }]}>
-                <IconSymbol name="car.fill" size={24} color={GOLD} />
-              </View>
-              <Text style={[styles.roleCardTitle, { color: colors.foreground }]}>Drive</Text>
-              <Text style={[styles.roleCardDesc, { color: colors.muted }]}>Earn with your vehicle</Text>
-              {selectedRole === "driver" && (
-                <View style={[styles.roleCheck, { backgroundColor: GOLD }]}>
-                  <IconSymbol name="checkmark" size={12} color="#fff" />
-                </View>
-              )}
-            </Pressable>
-          </View>
-
-          {/* Island */}
-          <Text style={[styles.fieldLabel, { color: colors.muted }]}>YOUR ISLAND</Text>
-          <View style={[styles.islandGrid]}>
-            {islands.map(([key, label]) => (
+          <Animated.View entering={FadeIn.delay(400).duration(400)}>
+            <Text style={[styles.fieldLabel, { color: colors.muted }]}>I WANT TO</Text>
+            <View style={styles.roleRow}>
               <Pressable
-                key={key}
                 onPress={() => {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setSelectedIsland(key);
+                  setSelectedRole("rider");
                 }}
                 style={({ pressed }) => [
-                  styles.islandChip,
+                  styles.roleCard,
                   {
-                    backgroundColor: selectedIsland === key ? TURQUOISE + "12" : colors.surface,
-                    borderColor: selectedIsland === key ? TURQUOISE : colors.border,
+                    backgroundColor: selectedRole === "rider" ? TURQUOISE + "12" : colors.surface,
+                    borderColor: selectedRole === "rider" ? TURQUOISE : colors.border,
                   },
-                  pressed && { opacity: 0.8 },
+                  pressed && { transform: [{ scale: 0.97 }] },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.islandChipText,
-                    { color: selectedIsland === key ? TURQUOISE : colors.foreground },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {label.split("/")[0].trim()}
-                </Text>
-                {selectedIsland === key && (
-                  <IconSymbol name="checkmark" size={14} color={TURQUOISE} />
+                <View style={[styles.roleIconBox, { backgroundColor: TURQUOISE + "18" }]}>
+                  <IconSymbol name="person.fill" size={24} color={TURQUOISE} />
+                </View>
+                <Text style={[styles.roleCardTitle, { color: colors.foreground }]}>Ride</Text>
+                <Text style={[styles.roleCardDesc, { color: colors.muted }]}>Get around the islands</Text>
+                {selectedRole === "rider" && (
+                  <View style={[styles.roleCheck, { backgroundColor: TURQUOISE }]}>
+                    <IconSymbol name="checkmark" size={12} color="#fff" />
+                  </View>
                 )}
               </Pressable>
-            ))}
-          </View>
+              <Pressable
+                onPress={() => {
+                  if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSelectedRole("driver");
+                }}
+                style={({ pressed }) => [
+                  styles.roleCard,
+                  {
+                    backgroundColor: selectedRole === "driver" ? GOLD + "12" : colors.surface,
+                    borderColor: selectedRole === "driver" ? GOLD : colors.border,
+                  },
+                  pressed && { transform: [{ scale: 0.97 }] },
+                ]}
+              >
+                <View style={[styles.roleIconBox, { backgroundColor: GOLD + "18" }]}>
+                  <IconSymbol name="car.fill" size={24} color={GOLD} />
+                </View>
+                <Text style={[styles.roleCardTitle, { color: colors.foreground }]}>Drive</Text>
+                <Text style={[styles.roleCardDesc, { color: colors.muted }]}>Earn with your vehicle</Text>
+                {selectedRole === "driver" && (
+                  <View style={[styles.roleCheck, { backgroundColor: GOLD }]}>
+                    <IconSymbol name="checkmark" size={12} color="#fff" />
+                  </View>
+                )}
+              </Pressable>
+            </View>
+          </Animated.View>
+
+          {/* Island */}
+          <Animated.View entering={FadeIn.delay(500).duration(400)}>
+            <Text style={[styles.fieldLabel, { color: colors.muted }]}>YOUR ISLAND</Text>
+            <View style={[styles.islandGrid]}>
+              {islands.map(([key, label]) => (
+                <Pressable
+                  key={key}
+                  onPress={() => {
+                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedIsland(key);
+                  }}
+                  style={({ pressed }) => [
+                    styles.islandChip,
+                    {
+                      backgroundColor: selectedIsland === key ? TURQUOISE + "12" : colors.surface,
+                      borderColor: selectedIsland === key ? TURQUOISE : colors.border,
+                    },
+                    pressed && { opacity: 0.8 },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.islandChipText,
+                      { color: selectedIsland === key ? TURQUOISE : colors.foreground },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {label.split("/")[0].trim()}
+                  </Text>
+                  {selectedIsland === key && (
+                    <IconSymbol name="checkmark" size={14} color={TURQUOISE} />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          </Animated.View>
 
           {/* Get Started */}
-          <Pressable
-            onPress={handleFinish}
-            style={({ pressed }) => [
-              styles.finishBtn,
-              { backgroundColor: CYAN },
-              pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
-            ]}
-          >
-            <Text style={styles.finishBtnText}>Get Started</Text>
-            <IconSymbol name="chevron.right" size={18} color="#fff" />
-          </Pressable>
+          <Animated.View entering={FadeIn.delay(600).duration(400)}>
+            <Pressable
+              onPress={handleFinish}
+              style={({ pressed }) => [
+                styles.finishBtn,
+                { backgroundColor: CYAN },
+                pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
+              ]}
+            >
+              <Text style={styles.finishBtnText}>Get Started</Text>
+              <IconSymbol name="chevron.right" size={18} color="#fff" />
+            </Pressable>
 
-          <Pressable
-            onPress={() => {
-              dispatch({ type: "SET_ONBOARDED", value: true });
-              onComplete();
-            }}
-            style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-          >
-            <Text style={[styles.skipText, { color: colors.muted }]}>Skip for now</Text>
-          </Pressable>
+            <Pressable
+              onPress={() => {
+                dispatch({ type: "SET_ONBOARDED", value: true });
+                onComplete();
+              }}
+              style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+            >
+              <Text style={[styles.skipText, { color: colors.muted }]}>Skip for now</Text>
+            </Pressable>
+          </Animated.View>
         </ScrollView>
       </ScreenContainer>
     );
   }
 
-  // ── Intro pages with background images and icon rings ──
-  const currentPage = ONBOARDING_PAGES[page];
+  // ── Animated intro pages ──
+  const currentPageData = ONBOARDING_PAGES[page];
 
   return (
-    <View style={styles.fullScreen}>
-      {/* Background image — subtle behind the dark overlay */}
-      <Image
-        source={{ uri: currentPage.bgImage }}
-        style={StyleSheet.absoluteFillObject}
-        contentFit="cover"
-        transition={400}
-      />
-
-      {/* Dark navy overlay to maintain dark theme feel with image showing through */}
-      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(11,22,35,0.72)" }]} />
-
-      {/* Content */}
-      <View style={styles.pageContainer}>
-        {/* Skip button — top right */}
-        <View style={styles.topBar}>
-          <View style={{ width: 60 }} />
-          <View style={{ flex: 1 }} />
-          <Pressable
-            onPress={() => setPage(ONBOARDING_PAGES.length)}
-            style={({ pressed }) => [styles.skipBtn, pressed && { opacity: 0.6 }]}
-          >
-            <Text style={styles.skipBtnText}>Skip</Text>
-          </Pressable>
-        </View>
-
-        {/* Center content — icon with rings */}
-        <View style={styles.centerArea}>
-          {/* Outer ring */}
-          <View style={styles.outerRing}>
-            {/* Inner ring */}
-            <View style={styles.innerRing}>
-              {/* Icon circle */}
-              <View style={[styles.iconCircle, { backgroundColor: currentPage.iconColor }]}>
-                <IconSymbol name={currentPage.icon} size={36} color="#fff" />
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Bottom content — title, subtitle, dots, button */}
-        <View style={styles.bottomContent}>
-          <Text style={styles.pageTitle}>{currentPage.title}</Text>
-          <Text style={styles.pageSubtitle}>{currentPage.subtitle}</Text>
-
-          {/* Dots */}
-          <View style={styles.dotsRow}>
-            {ONBOARDING_PAGES.map((_, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  {
-                    backgroundColor: i === page ? CYAN : "rgba(255,255,255,0.25)",
-                    width: i === page ? 24 : 8,
-                  },
-                ]}
-              />
-            ))}
-          </View>
-
-          {/* Next button — cyan gradient style */}
-          <Pressable
-            onPress={handleNext}
-            style={({ pressed }) => [
-              styles.nextBtn,
-              { backgroundColor: CYAN },
-              pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
-            ]}
-          >
-            <Text style={styles.nextBtnText}>
-              {page === ONBOARDING_PAGES.length - 1 ? "Get Started" : "Next"}
-            </Text>
-            <IconSymbol name="chevron.right" size={18} color="#fff" />
-          </Pressable>
-        </View>
-      </View>
-    </View>
+    <AnimatedIntroPage
+      key={page}
+      pageData={currentPageData}
+      pageIndex={page}
+      currentPage={page}
+      totalPages={ONBOARDING_PAGES.length}
+      onNext={handleNext}
+      onSkip={() => setPage(ONBOARDING_PAGES.length)}
+    />
   );
 }
 
@@ -323,6 +540,7 @@ const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
     backgroundColor: NAVY,
+    overflow: "hidden",
   },
   pageContainer: {
     flex: 1,

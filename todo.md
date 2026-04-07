@@ -67,3 +67,13 @@
 ## Bug Fix: Onboarding Not Showing First
 - [x] Fix onboarding gating so it shows before map for new/returning users
 - [x] Ensure onboarding state resets properly or shows on first launch (added Sign Out button in profile)
+
+## Onboarding Welcome Page Animations
+- [x] Add fade-in + slide-up animation on title text when page appears
+- [x] Add fade-in + slide-up animation on subtitle text (staggered delay)
+- [x] Add subtle Ken Burns (slow zoom/pan) effect on background images
+- [x] Add animated icon entrance (scale from 0 to 1 with spring + rotation)
+- [x] Add smooth crossfade transition between pages (key-based remount)
+- [x] Add animated dot indicator transitions
+- [x] Add fade-in + slide-up for the Next button
+- [x] Verify all animations work and no regressions (0 TS errors, 76 tests pass)
