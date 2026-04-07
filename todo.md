@@ -54,3 +54,12 @@
 - [x] Update car markers/icons to look more official and professional
 - [x] Update theme colors to Bahamas-inspired palette
 - [x] Verify all existing functionality unchanged after visual updates (0 TS errors, 76 tests pass)
+
+## Onboarding Restoration with Island Backgrounds
+- [x] Generate 3 island-themed background images (island road + happy person in car + Bahamas vibes)
+- [x] Restore original 3-page onboarding structure: Welcome, Ride or Drive, Island to Island
+- [x] Keep dark navy background with icon rings from original design
+- [x] Add background images behind text on each onboarding page
+- [x] Make colors more island-like (turquoise, ocean blue, tropical tones)
+- [x] Keep setup page (name, role, island selection) as-is
+- [x] Verify all functionality unchanged (0 TS errors, 76 tests pass)

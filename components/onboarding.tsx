@@ -8,7 +8,6 @@ import {
   Platform,
   Dimensions,
   ScrollView,
-  ImageBackground,
 } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -19,36 +18,41 @@ import type { Island, UserRole } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 
+const NAVY = "#0B1623";
+const NAVY_SURFACE = "#132035";
 const GOLD = "#D4A853";
-const TURQUOISE = "#00B4C5";
-const SAND = "#F5EDE3";
-const OCEAN_DARK = "#0A4D68";
+const TURQUOISE = "#00D4AA";
+const CYAN = "#00E5CC";
+const RING_COLOR = "rgba(255,255,255,0.06)";
+const RING_COLOR_2 = "rgba(255,255,255,0.03)";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const WELCOME_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663029561572/EDxhXSUho2ibhDsxCXss7y/welcome-bg-dHkbNLA2nycN64qyJCVrmP.webp";
-const WELCOME_HERO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663029561572/EDxhXSUho2ibhDsxCXss7y/welcome-hero-nnC69Wf6iopcsTcG6fzaBf.webp";
+// Background images for each onboarding page
+const BG_WELCOME = "https://d2xsxph8kpxj0f.cloudfront.net/310419663029561572/EDxhXSUho2ibhDsxCXss7y/onboarding-welcome-bg-JWYSERHbQhscNUs6AZHRgX.webp";
+const BG_RIDE_DRIVE = "https://d2xsxph8kpxj0f.cloudfront.net/310419663029561572/EDxhXSUho2ibhDsxCXss7y/onboarding-ride-drive-bg-FwK7JVo9QFgeeKJNwUNMcd.webp";
+const BG_ISLANDS = "https://d2xsxph8kpxj0f.cloudfront.net/310419663029561572/EDxhXSUho2ibhDsxCXss7y/onboarding-islands-bg-QmtStVK4o2PRXmZ2Ps8hqX.webp";
 
 const ONBOARDING_PAGES = [
   {
     icon: "car.fill" as const,
     title: "Welcome to IslandRide",
-    subtitle: "Your local way to get around the islands.\nBy Bahamians, for Bahamians.",
-    color: TURQUOISE,
-    bgImage: WELCOME_HERO,
+    subtitle: "The Bahamas' own ride-hailing platform.\nConnecting riders and drivers across the islands.",
+    iconColor: TURQUOISE,
+    bgImage: BG_WELCOME,
   },
   {
     icon: "person.2.fill" as const,
     title: "Ride or Drive",
-    subtitle: "Book a ride as a passenger, or earn\nby driving — switch anytime.",
-    color: GOLD,
-    bgImage: WELCOME_BG,
+    subtitle: "Request rides as a passenger, or earn money\nby driving \u2014 switch anytime.",
+    iconColor: GOLD,
+    bgImage: BG_RIDE_DRIVE,
   },
   {
     icon: "location.fill" as const,
     title: "Island to Island",
     subtitle: "Serving Nassau, Grand Bahama,\nExumas, Eleuthera, and beyond.",
-    color: "#34D399",
-    bgImage: WELCOME_BG,
+    iconColor: "#34D399",
+    bgImage: BG_ISLANDS,
   },
 ];
 
@@ -88,7 +92,7 @@ export default function Onboarding({ onComplete }: Props) {
   if (isSetupPage) {
     const islands = Object.entries(ISLAND_LABELS) as [Island, string][];
     return (
-      <ScreenContainer edges={["top", "bottom", "left", "right"]}>
+      <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-background">
         <ScrollView
           style={styles.setupContainer}
           contentContainerStyle={styles.setupContent}
@@ -96,12 +100,12 @@ export default function Onboarding({ onComplete }: Props) {
         >
           <Text style={[styles.setupTitle, { color: colors.foreground }]}>Set up your profile</Text>
           <Text style={[styles.setupSubtitle, { color: colors.muted }]}>
-            Tell us a bit about yourself
+            Just a few details to get started
           </Text>
 
           {/* Name */}
           <Text style={[styles.fieldLabel, { color: colors.muted }]}>YOUR NAME</Text>
-          <View style={[styles.inputBox, { backgroundColor: colors.surface }]}>
+          <View style={[styles.inputBox, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
             <IconSymbol name="person.fill" size={18} color={colors.muted} />
             <TextInput
               style={[styles.input, { color: colors.foreground }]}
@@ -124,19 +128,19 @@ export default function Onboarding({ onComplete }: Props) {
               style={({ pressed }) => [
                 styles.roleCard,
                 {
-                  backgroundColor: selectedRole === "rider" ? colors.primary + "12" : colors.surface,
-                  borderColor: selectedRole === "rider" ? colors.primary : colors.border,
+                  backgroundColor: selectedRole === "rider" ? TURQUOISE + "12" : colors.surface,
+                  borderColor: selectedRole === "rider" ? TURQUOISE : colors.border,
                 },
                 pressed && { transform: [{ scale: 0.97 }] },
               ]}
             >
-              <View style={[styles.roleIconBox, { backgroundColor: colors.primary + "18" }]}>
-                <IconSymbol name="person.fill" size={24} color={colors.primary} />
+              <View style={[styles.roleIconBox, { backgroundColor: TURQUOISE + "18" }]}>
+                <IconSymbol name="person.fill" size={24} color={TURQUOISE} />
               </View>
               <Text style={[styles.roleCardTitle, { color: colors.foreground }]}>Ride</Text>
-              <Text style={[styles.roleCardDesc, { color: colors.muted }]}>Book rides on your island</Text>
+              <Text style={[styles.roleCardDesc, { color: colors.muted }]}>Get around the islands</Text>
               {selectedRole === "rider" && (
-                <View style={[styles.roleCheck, { backgroundColor: colors.primary }]}>
+                <View style={[styles.roleCheck, { backgroundColor: TURQUOISE }]}>
                   <IconSymbol name="checkmark" size={12} color="#fff" />
                 </View>
               )}
@@ -159,7 +163,7 @@ export default function Onboarding({ onComplete }: Props) {
                 <IconSymbol name="car.fill" size={24} color={GOLD} />
               </View>
               <Text style={[styles.roleCardTitle, { color: colors.foreground }]}>Drive</Text>
-              <Text style={[styles.roleCardDesc, { color: colors.muted }]}>Drive and earn locally</Text>
+              <Text style={[styles.roleCardDesc, { color: colors.muted }]}>Earn with your vehicle</Text>
               {selectedRole === "driver" && (
                 <View style={[styles.roleCheck, { backgroundColor: GOLD }]}>
                   <IconSymbol name="checkmark" size={12} color="#fff" />
@@ -181,8 +185,8 @@ export default function Onboarding({ onComplete }: Props) {
                 style={({ pressed }) => [
                   styles.islandChip,
                   {
-                    backgroundColor: selectedIsland === key ? colors.primary + "12" : colors.surface,
-                    borderColor: selectedIsland === key ? colors.primary : colors.border,
+                    backgroundColor: selectedIsland === key ? TURQUOISE + "12" : colors.surface,
+                    borderColor: selectedIsland === key ? TURQUOISE : colors.border,
                   },
                   pressed && { opacity: 0.8 },
                 ]}
@@ -190,14 +194,14 @@ export default function Onboarding({ onComplete }: Props) {
                 <Text
                   style={[
                     styles.islandChipText,
-                    { color: selectedIsland === key ? colors.primary : colors.foreground },
+                    { color: selectedIsland === key ? TURQUOISE : colors.foreground },
                   ]}
                   numberOfLines={1}
                 >
                   {label.split("/")[0].trim()}
                 </Text>
                 {selectedIsland === key && (
-                  <IconSymbol name="checkmark" size={14} color={colors.primary} />
+                  <IconSymbol name="checkmark" size={14} color={TURQUOISE} />
                 )}
               </Pressable>
             ))}
@@ -208,7 +212,7 @@ export default function Onboarding({ onComplete }: Props) {
             onPress={handleFinish}
             style={({ pressed }) => [
               styles.finishBtn,
-              { backgroundColor: colors.primary },
+              { backgroundColor: CYAN },
               pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
             ]}
           >
@@ -230,13 +234,12 @@ export default function Onboarding({ onComplete }: Props) {
     );
   }
 
-  // ── Intro pages ──
+  // ── Intro pages with background images and icon rings ──
   const currentPage = ONBOARDING_PAGES[page];
-  const isFirstPage = page === 0;
 
   return (
     <View style={styles.fullScreen}>
-      {/* Background image */}
+      {/* Background image — subtle behind the dark overlay */}
       <Image
         source={{ uri: currentPage.bgImage }}
         style={StyleSheet.absoluteFillObject}
@@ -244,23 +247,15 @@ export default function Onboarding({ onComplete }: Props) {
         transition={400}
       />
 
-      {/* Gradient overlay — lighter at top, darker at bottom for text readability */}
-      <View style={styles.gradientOverlay}>
-        <View style={styles.gradientTop} />
-        <View style={styles.gradientBottom} />
-      </View>
+      {/* Dark navy overlay to maintain dark theme feel with image showing through */}
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(11,22,35,0.72)" }]} />
 
       {/* Content */}
       <View style={styles.pageContainer}>
-        {/* Skip button */}
+        {/* Skip button — top right */}
         <View style={styles.topBar}>
           <View style={{ width: 60 }} />
-          <View style={styles.logoArea}>
-            <View style={[styles.logoIcon, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
-              <IconSymbol name="car.fill" size={16} color="#fff" />
-            </View>
-            <Text style={styles.logoText}>IslandRide</Text>
-          </View>
+          <View style={{ flex: 1 }} />
           <Pressable
             onPress={() => setPage(ONBOARDING_PAGES.length)}
             style={({ pressed }) => [styles.skipBtn, pressed && { opacity: 0.6 }]}
@@ -269,17 +264,22 @@ export default function Onboarding({ onComplete }: Props) {
           </Pressable>
         </View>
 
-        {/* Spacer pushes content to bottom */}
-        <View style={{ flex: 1 }} />
-
-        {/* Bottom content area */}
-        <View style={styles.bottomContent}>
-          {/* Icon badge */}
-          <View style={[styles.iconBadge, { backgroundColor: currentPage.color }]}>
-            <IconSymbol name={currentPage.icon} size={24} color="#fff" />
+        {/* Center content — icon with rings */}
+        <View style={styles.centerArea}>
+          {/* Outer ring */}
+          <View style={styles.outerRing}>
+            {/* Inner ring */}
+            <View style={styles.innerRing}>
+              {/* Icon circle */}
+              <View style={[styles.iconCircle, { backgroundColor: currentPage.iconColor }]}>
+                <IconSymbol name={currentPage.icon} size={36} color="#fff" />
+              </View>
+            </View>
           </View>
+        </View>
 
-          {/* Title and subtitle */}
+        {/* Bottom content — title, subtitle, dots, button */}
+        <View style={styles.bottomContent}>
           <Text style={styles.pageTitle}>{currentPage.title}</Text>
           <Text style={styles.pageSubtitle}>{currentPage.subtitle}</Text>
 
@@ -291,7 +291,7 @@ export default function Onboarding({ onComplete }: Props) {
                 style={[
                   styles.dot,
                   {
-                    backgroundColor: i === page ? "#fff" : "rgba(255,255,255,0.4)",
+                    backgroundColor: i === page ? CYAN : "rgba(255,255,255,0.25)",
                     width: i === page ? 24 : 8,
                   },
                 ]}
@@ -299,19 +299,19 @@ export default function Onboarding({ onComplete }: Props) {
             ))}
           </View>
 
-          {/* Next button */}
+          {/* Next button — cyan gradient style */}
           <Pressable
             onPress={handleNext}
             style={({ pressed }) => [
               styles.nextBtn,
-              { backgroundColor: "#fff" },
+              { backgroundColor: CYAN },
               pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
             ]}
           >
-            <Text style={[styles.nextBtnText, { color: OCEAN_DARK }]}>
-              {page === ONBOARDING_PAGES.length - 1 ? "Get Started" : "Continue"}
+            <Text style={styles.nextBtnText}>
+              {page === ONBOARDING_PAGES.length - 1 ? "Get Started" : "Next"}
             </Text>
-            <IconSymbol name="chevron.right" size={18} color={OCEAN_DARK} />
+            <IconSymbol name="chevron.right" size={18} color="#fff" />
           </Pressable>
         </View>
       </View>
@@ -322,78 +322,71 @@ export default function Onboarding({ onComplete }: Props) {
 const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
-    backgroundColor: "#000",
-  },
-  gradientOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "space-between",
-  },
-  gradientTop: {
-    height: "35%",
-    backgroundColor: "rgba(0,0,0,0.05)",
-  },
-  gradientBottom: {
-    height: "55%",
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: NAVY,
   },
   pageContainer: {
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: Platform.OS === "web" ? 16 : 52,
-    paddingBottom: Platform.OS === "web" ? 24 : 40,
+    paddingBottom: Platform.OS === "web" ? 24 : 44,
   },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  logoArea: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  logoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoText: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#fff",
-    letterSpacing: 0.5,
-  },
   skipBtn: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    minWidth: 60,
-    alignItems: "center",
   },
   skipBtnText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
-    color: "rgba(255,255,255,0.9)",
+    color: "rgba(255,255,255,0.7)",
   },
+  // Center icon with concentric rings
+  centerArea: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  outerRing: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: RING_COLOR_2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  innerRing: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 1,
+    borderColor: RING_COLOR,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  iconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  // Bottom content
   bottomContent: {
     alignItems: "center",
     gap: 12,
-  },
-  iconBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    paddingBottom: 8,
   },
   pageTitle: {
     fontSize: 28,
@@ -406,15 +399,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     lineHeight: 24,
-    color: "rgba(255,255,255,0.85)",
-    marginBottom: 4,
+    color: "rgba(255,255,255,0.65)",
+    marginBottom: 8,
   },
   dotsRow: {
     flexDirection: "row",
     alignSelf: "center",
     gap: 6,
-    marginBottom: 8,
-    marginTop: 4,
+    marginBottom: 16,
   },
   dot: {
     height: 8,
@@ -425,18 +417,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 16,
     width: "100%",
-    shadowColor: "#000",
+    shadowColor: CYAN,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   nextBtnText: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "700",
+    color: "#fff",
   },
   // Setup page styles
   setupContainer: { flex: 1 },
@@ -499,10 +492,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 16,
     marginBottom: 12,
   },
-  finishBtnText: { color: "#fff", fontSize: 17, fontWeight: "700" },
+  finishBtnText: { color: "#fff", fontSize: 18, fontWeight: "700" },
   skipText: { fontSize: 15, textAlign: "center", paddingVertical: 8 },
 });
