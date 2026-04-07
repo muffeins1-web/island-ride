@@ -1064,6 +1064,37 @@ export default function ProfileScreen() {
             ))}
           </View>
         ))}
+
+        {/* Sign Out / Reset */}
+        <Pressable
+          onPress={() => {
+            Alert.alert(
+              "Sign Out",
+              "This will sign you out and show the welcome screen again.",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Sign Out",
+                  style: "destructive",
+                  onPress: () => {
+                    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    dispatch({ type: "SET_ONBOARDED", value: false });
+                  },
+                },
+              ]
+            );
+          }}
+          style={({ pressed }) => [
+            styles.signOutBtn,
+            { borderColor: colors.error + "40" },
+            pressed && { opacity: 0.7, transform: [{ scale: 0.98 }] },
+          ]}
+        >
+          <IconSymbol name="arrow.left" size={16} color={colors.error} />
+          <Text style={[styles.signOutText, { color: colors.error }]}>Sign Out</Text>
+        </Pressable>
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </ScreenContainer>
   );
@@ -1374,6 +1405,21 @@ const styles = StyleSheet.create({
   contactInitial: { fontSize: 18, fontWeight: "700" },
   contactName: { fontSize: 16, fontWeight: "600" },
   contactPhone: { fontSize: 13, marginTop: 2 },
+  // Sign Out
+  signOutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  signOutText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
 });
 
 

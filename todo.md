@@ -63,3 +63,7 @@
 - [x] Make colors more island-like (turquoise, ocean blue, tropical tones)
 - [x] Keep setup page (name, role, island selection) as-is
 - [x] Verify all functionality unchanged (0 TS errors, 76 tests pass)
+
+## Bug Fix: Onboarding Not Showing First
+- [x] Fix onboarding gating so it shows before map for new/returning users
+- [x] Ensure onboarding state resets properly or shows on first launch (added Sign Out button in profile)
