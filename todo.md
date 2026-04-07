@@ -77,3 +77,6 @@
 - [x] Add animated dot indicator transitions
 - [x] Add fade-in + slide-up for the Next button
 - [x] Verify all animations work and no regressions (0 TS errors, 76 tests pass)
+
+## Critical Fix: Force Onboarding on App Open
+- [x] Reset hasOnboarded via version-based storage clear so welcome pages show on next app open

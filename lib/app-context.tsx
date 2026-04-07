@@ -135,14 +135,24 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 const STORAGE_KEY = "@islandride_state";
+const STORAGE_VERSION_KEY = "@islandride_version";
+const CURRENT_VERSION = "2"; // Bump this to force onboarding reset
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, defaultState);
 
-  // Load persisted state
+  // Load persisted state — with version check to force onboarding on updates
   useEffect(() => {
     (async () => {
       try {
+        const storedVersion = await AsyncStorage.getItem(STORAGE_VERSION_KEY);
+        if (storedVersion !== CURRENT_VERSION) {
+          // New version — clear old state so onboarding shows
+          await AsyncStorage.removeItem(STORAGE_KEY);
+          await AsyncStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
+          // Keep default state (hasOnboarded: false) — onboarding will show
+          return;
+        }
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const saved = JSON.parse(raw);
