@@ -20,9 +20,6 @@ export const GOOGLE_MAPS_API_KEY =
 
 export const isGoogleMapsAvailable = GOOGLE_MAPS_API_KEY.length > 0;
 
-// Legacy alias (some tests reference this)
-export const isMapboxAvailable = isGoogleMapsAvailable;
-
 // ─────────────────────────────────────────────
 // Google Maps API endpoints
 // ─────────────────────────────────────────────

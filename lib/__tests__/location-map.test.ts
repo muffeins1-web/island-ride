@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  isMapboxAvailable,
+  isGoogleMapsAvailable,
   getIslandCamera,
   isInBahamas,
   isInIslandServiceArea,
@@ -51,8 +51,9 @@ describe("distanceKm (Haversine)", () => {
 // ─────────────────────────────────────────────
 
 describe("map-config", () => {
-  it("isMapboxAvailable is false without env var", () => {
-    expect(isMapboxAvailable).toBe(false);
+  it("isGoogleMapsAvailable reflects env var", () => {
+    // In test env, EXPO_PUBLIC_GOOGLE_MAPS_KEY is not set
+    expect(isGoogleMapsAvailable).toBe(false);
   });
 
   it("provides camera positions for every island", () => {
