@@ -7,6 +7,18 @@ type ApiResponse<T> = {
   error?: string;
 };
 
+function getNativeApiBaseUrlOrThrow(): string {
+  const baseUrl = getApiBaseUrl();
+
+  if (Platform.OS !== "web" && !baseUrl) {
+    throw new Error(
+      "Native API base URL is unavailable. Start Expo in LAN mode on the same Wi-Fi network or set EXPO_PUBLIC_API_BASE_URL.",
+    );
+  }
+
+  return baseUrl;
+}
+
 export async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -24,7 +36,7 @@ export async function apiCall<T>(endpoint: string, options: RequestInit = {}): P
     }
   }
 
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = getNativeApiBaseUrlOrThrow();
   // Ensure no double slashes between baseUrl and endpoint
   const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
@@ -115,7 +127,7 @@ export async function getMe(): Promise<{
 // Called after receiving token via postMessage to get a proper Set-Cookie from the backend
 export async function establishSession(token: string): Promise<boolean> {
   try {
-    const baseUrl = getApiBaseUrl();
+    const baseUrl = getNativeApiBaseUrlOrThrow();
     const url = `${baseUrl}/api/auth/session`;
 
     const response = await fetch(url, {

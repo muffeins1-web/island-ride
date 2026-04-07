@@ -578,6 +578,7 @@ Available environment variables:
 |----------|-------------|
 | `DATABASE_URL` | MySQL/TiDB connection string |
 | `JWT_SECRET` | Session signing secret |
+| `HOST` | API server bind host (defaults to `0.0.0.0`) |
 | `VITE_APP_ID` | Manus OAuth app ID |
 | `OAUTH_SERVER_URL` | Manus OAuth backend URL |
 | `VITE_OAUTH_PORTAL_URL` | Manus login portal URL |

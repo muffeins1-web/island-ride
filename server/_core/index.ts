@@ -29,12 +29,13 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  const host = process.env.HOST || "0.0.0.0";
 
   // CORS — allow specific origins (comma-separated in CORS_ORIGIN env var)
   const allowedOrigins = new Set(
     (process.env.CORS_ORIGIN || "")
       .split(",")
-      .map((o) => o.trim())
+      .map((o: string) => o.trim())
       .filter(Boolean),
   );
 
@@ -94,8 +95,8 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
-    console.log(`[api] server listening on port ${port}`);
+  server.listen(port, host, () => {
+    console.log(`[api] server listening on http://${host}:${port}`);
   });
 }
 

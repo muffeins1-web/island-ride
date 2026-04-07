@@ -24,6 +24,54 @@ export const OWNER_OPEN_ID = env.ownerId;
 export const OWNER_NAME = env.ownerName;
 export const API_BASE_URL = env.apiBaseUrl;
 
+const API_SERVER_PORT = 3000;
+let hasWarnedMissingNativeApiBaseUrl = false;
+
+function warnMissingNativeApiBaseUrl(reason?: string) {
+  if (hasWarnedMissingNativeApiBaseUrl) return;
+
+  hasWarnedMissingNativeApiBaseUrl = true;
+
+  console.warn(
+    `[API] Native API base URL is unavailable${
+      reason ? `: ${reason}` : ""
+    }. Start Expo with --lan on the same Wi-Fi network, or set EXPO_PUBLIC_API_BASE_URL explicitly.`,
+  );
+}
+
+function isLanHost(hostname: string): boolean {
+  if (!hostname) return false;
+  if (hostname === "localhost") return true;
+  if (hostname.endsWith(".local")) return true;
+  return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname);
+}
+
+function getNativeExpoGoApiBaseUrl(): string {
+  try {
+    const expoUrl = Linking.createURL("/");
+    const parsed = new URL(expoUrl);
+    const hostname = parsed.hostname;
+
+    if (!hostname) {
+      warnMissingNativeApiBaseUrl("Expo Go host could not be determined");
+      return "";
+    }
+
+    if (!isLanHost(hostname)) {
+      warnMissingNativeApiBaseUrl(
+        `Expo Go host "${hostname}" is not a LAN address supported by this smoke-test setup`,
+      );
+      return "";
+    }
+
+    return `http://${hostname}:${API_SERVER_PORT}`;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unable to parse Expo Go URL";
+    warnMissingNativeApiBaseUrl(message);
+    return "";
+  }
+}
+
 /**
  * Get the API base URL, deriving from current hostname if not set.
  * Metro runs on 8081, API server runs on 3000.
@@ -43,6 +91,10 @@ export function getApiBaseUrl(): string {
     if (apiHostname !== hostname) {
       return `${protocol}//${apiHostname}`;
     }
+  }
+
+  if (ReactNative.Platform.OS !== "web") {
+    return getNativeExpoGoApiBaseUrl();
   }
 
   // Fallback to empty (will use relative URL)
