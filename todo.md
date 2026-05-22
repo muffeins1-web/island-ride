@@ -80,3 +80,17 @@
 
 ## Critical Fix: Force Onboarding on App Open
 - [x] Reset hasOnboarded via version-based storage clear so welcome pages show on next app open
+
+## Real Address Search & GPS Location
+- [x] Create location-service.ts with OpenStreetMap Nominatim API (no API key required)
+- [x] Implement searchAddresses() with debounced real geocoding
+- [x] Implement getCurrentLocation() using expo-location for real GPS
+- [x] Implement calculateDistance() and estimateTravelTime() helpers
+- [x] Integrate live address search into rider-home.tsx (replaces mock-only filtering)
+- [x] Show real search results with distance, ETA, and estimated fare
+- [x] Show loading spinner during search
+- [x] Show empty state when no results found
+- [x] Keep popular destinations visible when not searching
+- [x] Remove unused filteredDestinations/allDestinations dead code
+- [x] Verify zero TypeScript errors and all 76 tests pass
+- [ ] Push to GitHub

@@ -10,6 +10,7 @@ import {
   Platform,
   Animated,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -30,6 +31,7 @@ import RideTracking from "./ride-tracking";
 import RideComplete from "./ride-complete";
 import IslandMap from "@/components/ui/island-map";
 import * as Haptics from "expo-haptics";
+import { searchAddresses, getCurrentLocation, calculateDistance, estimateTravelTime, type GeocodedAddress } from "@/lib/location-service";
 
 const GOLD = "#D4A853";
 
@@ -59,18 +61,56 @@ export default function RiderHome() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const currentIsland = state.island;
+
+  // Real location & search state
+  const [liveSearchResults, setLiveSearchResults] = useState<GeocodedAddress[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Get real device location on mount
+  useEffect(() => {
+    getCurrentLocation().then((loc) => {
+      if (loc) setUserLocation(loc);
+    });
+  }, []);
+
+  // Debounced real address search
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    if (!searchText || searchText.trim().length < 2) {
+      setLiveSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      const results = await searchAddresses(searchText, 8);
+      setLiveSearchResults(results);
+      setIsSearching(false);
+    }, 400);
+    return () => { if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
+  }, [searchText]);
+
+  // Convert a GeocodedAddress to a PopularDestination for the ride flow
+  const geocodedToDestination = useCallback((addr: GeocodedAddress): PopularDestination => {
+    return {
+      id: addr.id,
+      name: addr.name,
+      address: addr.address,
+      icon: "mappin.circle.fill",
+      island: currentIsland,
+      location: {
+        latitude: addr.latitude,
+        longitude: addr.longitude,
+        name: addr.name,
+        address: addr.address,
+      },
+    };
+  }, [currentIsland]);
   const islandDestinations = POPULAR_DESTINATIONS.filter((d) => d.island === currentIsland);
   const savedPlaces = useMemo(() => getSavedPlacesForIsland(currentIsland), [currentIsland]);
   const nearbyDrivers = useMemo(() => getNearbyDriversForIsland(currentIsland), [currentIsland]);
-  const allDestinations = POPULAR_DESTINATIONS;
-  const filteredDestinations = searchText
-    ? allDestinations.filter(
-        (d) =>
-          d.name.toLowerCase().includes(searchText.toLowerCase()) ||
-          d.address.toLowerCase().includes(searchText.toLowerCase()) ||
-          (d.location.name && d.location.name.toLowerCase().includes(searchText.toLowerCase()))
-      )
-    : islandDestinations;
 
   // Recent rides from history
   const recentDestinations = useMemo(() => {
@@ -500,6 +540,71 @@ export default function RiderHome() {
           </View>
         )}
 
+        {/* Live search results from real geocoding API */}
+        {searchText.length >= 2 && (
+          <>
+            {isSearching && (
+              <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={[{ color: colors.muted, fontSize: 13, marginTop: 8 }]}>Searching real addresses...</Text>
+              </View>
+            )}
+            {!isSearching && liveSearchResults.length > 0 && (
+              <>
+                <Text style={[styles.sectionLabel, { color: colors.muted }]}>
+                  {liveSearchResults.length} real address{liveSearchResults.length !== 1 ? "es" : ""} found
+                </Text>
+                <FlatList
+                  data={liveSearchResults}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  renderItem={({ item }) => {
+                    const distKm = userLocation
+                      ? calculateDistance(userLocation.latitude, userLocation.longitude, item.latitude, item.longitude)
+                      : null;
+                    const etaMins = distKm ? estimateTravelTime(distKm) : null;
+                    const fare = distKm && etaMins ? calculateFare(distKm, etaMins, "standard") : null;
+                    return (
+                      <Pressable
+                        onPress={() => {
+                          const dest = geocodedToDestination(item);
+                          handleSelectDestination(dest);
+                        }}
+                        style={({ pressed }) => [
+                          styles.destRow,
+                          { borderBottomColor: colors.border },
+                          pressed && { opacity: 0.7, backgroundColor: colors.surface },
+                        ]}
+                      >
+                        <View style={[styles.destIcon, { backgroundColor: colors.primary + "12" }]}>
+                          <IconSymbol name="mappin.circle.fill" size={18} color={colors.primary} />
+                        </View>
+                        <View style={styles.destInfo}>
+                          <Text style={[styles.destName, { color: colors.foreground }]}>{item.name}</Text>
+                          <Text style={[styles.destAddr, { color: colors.muted }]} numberOfLines={2}>{item.address}</Text>
+                        </View>
+                        <View style={styles.destMeta}>
+                          {etaMins && <Text style={[styles.destEta, { color: colors.foreground }]}>{etaMins} min</Text>}
+                          {fare && <Text style={[styles.destFare, { color: colors.muted }]}>~${fare.toFixed(0)}</Text>}
+                          {distKm && <Text style={[{ fontSize: 11, color: colors.muted }]}>{distKm.toFixed(1)} km</Text>}
+                        </View>
+                      </Pressable>
+                    );
+                  }}
+                  ListEmptyComponent={null}
+                />
+              </>
+            )}
+            {!isSearching && liveSearchResults.length === 0 && searchText.length >= 3 && (
+              <View style={styles.emptyState}>
+                <IconSymbol name="magnifyingglass" size={32} color={colors.border} />
+                <Text style={[styles.emptyText, { color: colors.muted }]}>No addresses found</Text>
+                <Text style={[styles.emptySubtext, { color: colors.border }]}>Try a different street name or landmark in the Bahamas</Text>
+              </View>
+            )}
+          </>
+        )}
+
         {/* Recent rides */}
         {!searchText && recentDestinations.length > 0 && (
           <View style={styles.recentSection}>
@@ -559,53 +664,53 @@ export default function RiderHome() {
           </View>
         )}
 
-        <Text style={[styles.sectionLabel, { color: colors.muted }]}>
-          {searchText
-            ? `${filteredDestinations.length} result${filteredDestinations.length !== 1 ? "s" : ""} for "${searchText}"`
-            : "Popular on " + getIslandShortLabel(currentIsland)}
-        </Text>
+        {/* Popular destinations shown when NOT searching */}
+        {!searchText && (
+          <>
+            <Text style={[styles.sectionLabel, { color: colors.muted }]}>
+              {"Popular on " + getIslandShortLabel(currentIsland)}
+            </Text>
 
-        <FlatList
-          data={filteredDestinations}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => {
-            const dist = getDestDistance(item);
-            const fare = calculateFare(dist.km, dist.mins, "standard");
-            const isOtherIsland = searchText && item.island !== currentIsland;
-            return (
-              <Pressable
-                onPress={() => handleSelectDestination(item)}
-                style={({ pressed }) => [
-                  styles.destRow,
-                  { borderBottomColor: colors.border },
-                  pressed && { opacity: 0.7, backgroundColor: colors.surface },
-                ]}
-              >
-                <View style={[styles.destIcon, { backgroundColor: colors.primary + "12" }]}>
-                  <IconSymbol name={item.icon as any} size={18} color={colors.primary} />
+            <FlatList
+              data={islandDestinations}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => {
+                const dist = getDestDistance(item);
+                const fare = calculateFare(dist.km, dist.mins, "standard");
+                return (
+                  <Pressable
+                    onPress={() => handleSelectDestination(item)}
+                    style={({ pressed }) => [
+                      styles.destRow,
+                      { borderBottomColor: colors.border },
+                      pressed && { opacity: 0.7, backgroundColor: colors.surface },
+                    ]}
+                  >
+                    <View style={[styles.destIcon, { backgroundColor: colors.primary + "12" }]}>
+                      <IconSymbol name={item.icon as any} size={18} color={colors.primary} />
+                    </View>
+                    <View style={styles.destInfo}>
+                      <Text style={[styles.destName, { color: colors.foreground }]}>{item.name}</Text>
+                      <Text style={[styles.destAddr, { color: colors.muted }]}>{item.address}</Text>
+                    </View>
+                    <View style={styles.destMeta}>
+                      <Text style={[styles.destEta, { color: colors.foreground }]}>{dist.mins} min</Text>
+                      <Text style={[styles.destFare, { color: colors.muted }]}>~${fare.toFixed(0)}</Text>
+                    </View>
+                  </Pressable>
+                );
+              }}
+              ListEmptyComponent={
+                <View style={styles.emptyState}>
+                  <IconSymbol name="magnifyingglass" size={32} color={colors.border} />
+                  <Text style={[styles.emptyText, { color: colors.muted }]}>No destinations found</Text>
+                  <Text style={[styles.emptySubtext, { color: colors.border }]}>Try searching for a place, address, or landmark</Text>
                 </View>
-                <View style={styles.destInfo}>
-                  <Text style={[styles.destName, { color: colors.foreground }]}>{item.name}</Text>
-                  <Text style={[styles.destAddr, { color: colors.muted }]}>
-                    {item.address}{isOtherIsland ? " · " + ISLAND_LABELS[item.island] : ""}
-                  </Text>
-                </View>
-                <View style={styles.destMeta}>
-                  <Text style={[styles.destEta, { color: colors.foreground }]}>{dist.mins} min</Text>
-                  <Text style={[styles.destFare, { color: colors.muted }]}>~${fare.toFixed(0)}</Text>
-                </View>
-              </Pressable>
-            );
-          }}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <IconSymbol name="magnifyingglass" size={32} color={colors.border} />
-              <Text style={[styles.emptyText, { color: colors.muted }]}>No destinations found</Text>
-              <Text style={[styles.emptySubtext, { color: colors.border }]}>Try searching for a place, address, or landmark</Text>
-            </View>
-          }
-        />
+              }
+            />
+          </>
+        )}
       </ScreenContainer>
     );
   }
