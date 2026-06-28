@@ -43,7 +43,7 @@
 - [x] Verify all driver flows end-to-end
 - [x] Run TypeScript check and all tests
 - [x] Save clean checkpoint
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## UI Visual Redesign (No Functionality Changes)
 - [x] Restore welcome/sign-up screen as the opening/front screen
@@ -93,4 +93,4 @@
 - [x] Keep popular destinations visible when not searching
 - [x] Remove unused filteredDestinations/allDestinations dead code
 - [x] Verify zero TypeScript errors and all 76 tests pass
-- [ ] Push to GitHub
+- [x] Push to GitHub
