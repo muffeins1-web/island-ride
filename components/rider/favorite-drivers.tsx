@@ -172,7 +172,7 @@ export default function FavoriteDrivers({ onBack, onRequestRide }: Props) {
             </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No favorites yet</Text>
             <Text style={[styles.emptySubtitle, { color: colors.muted }]}>
-              After a trip, tap the heart icon to save drivers you'd like to ride with again.
+              After a trip, tap the heart icon to save drivers you&apos;d like to ride with again.
             </Text>
           </View>
         }

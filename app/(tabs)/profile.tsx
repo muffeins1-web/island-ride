@@ -809,7 +809,7 @@ export default function ProfileScreen() {
             1. Service Description{"\n"}IslandRide provides a technology platform connecting riders with independent transportation providers across the Bahamas. IslandRide does not provide transportation services directly.{"\n\n"}
             2. User Accounts{"\n"}You must provide accurate information when creating an account. You are responsible for maintaining the security of your account credentials.{"\n\n"}
             3. Fares and Payment{"\n"}Fares are calculated based on distance, time, and ride type. All fares are quoted in Bahamian Dollars (BSD). Cash and card payments are accepted.{"\n\n"}
-            4. Driver Requirements{"\n"}Drivers must hold a valid Bahamas driver's license, pass a background check, and maintain vehicle insurance. Vehicles must meet IslandRide's safety standards.{"\n\n"}
+            4. Driver Requirements{"\n"}Drivers must hold a valid Bahamas driver&apos;s license, pass a background check, and maintain vehicle insurance. Vehicles must meet IslandRide&apos;s safety standards.{"\n\n"}
             5. Safety{"\n"}Both riders and drivers are expected to treat each other with respect. IslandRide reserves the right to suspend accounts that violate community guidelines.{"\n\n"}
             6. Limitation of Liability{"\n"}IslandRide is not liable for delays, route changes, or incidents beyond our reasonable control. Our liability is limited to the fare paid for the affected trip.
           </Text>
@@ -946,7 +946,7 @@ export default function ProfileScreen() {
           <Text style={[styles.aboutVersion, { color: colors.muted }]}>Version 1.0.0</Text>
           <Text style={[styles.aboutTagline, { color: colors.primary }]}>Ride the Islands</Text>
           <Text style={[styles.aboutDesc, { color: colors.muted }]}>
-            The Bahamas' island mobility service - connecting riders with trusted local drivers across Nassau, Grand Bahama, the Exumas, and beyond.
+            The Bahamas&apos; island mobility service - connecting riders with trusted local drivers across Nassau, Grand Bahama, the Exumas, and beyond.
           </Text>
           <View style={[styles.aboutCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.aboutCardTitle, { color: colors.foreground }]}>Made in the Bahamas</Text>
@@ -1421,5 +1421,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
 

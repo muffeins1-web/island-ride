@@ -293,7 +293,7 @@ export default function RideTracking({ ride, onComplete }: Props) {
             style={({ pressed }) => [styles.actionBtn, { backgroundColor: colors.success }, pressed && { transform: [{ scale: 0.97 }] }]}
           >
             <IconSymbol name="checkmark" size={18} color="#fff" />
-            <Text style={styles.actionBtnText}>I'm in the car — Start trip</Text>
+            <Text style={styles.actionBtnText}>I&apos;m in the car — Start trip</Text>
           </Pressable>
         )}
         {status === "in_progress" && elapsed > 3 && (

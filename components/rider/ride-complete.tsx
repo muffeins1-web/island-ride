@@ -69,7 +69,7 @@ export default function RideComplete({ ride, onDone }: Props) {
           <View style={[styles.successCircle, { backgroundColor: colors.success + "15" }]}>
             <IconSymbol name="checkmark" size={44} color={colors.success} />
           </View>
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>You've Arrived</Text>
+          <Text style={[styles.successTitle, { color: colors.foreground }]}>You&apos;ve Arrived</Text>
           <Text style={[styles.successSubtitle, { color: colors.muted }]}>
             Welcome to {ride.dropoff.name || "your destination"}
           </Text>

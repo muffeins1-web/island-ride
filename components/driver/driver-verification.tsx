@@ -73,7 +73,7 @@ export default function DriverVerification({ onBack }: Props) {
           <Pressable onPress={() => setStep("overview")} style={({ pressed }) => [pressed && { opacity: 0.6 }]}>
             <IconSymbol name="arrow.left" size={24} color={colors.foreground} />
           </Pressable>
-          <Text style={[styles.headerTitle, { color: colors.foreground }]}>Driver's License</Text>
+          <Text style={[styles.headerTitle, { color: colors.foreground }]}>Driver&apos;s License</Text>
           <View style={{ width: 24 }} />
         </View>
 
@@ -81,7 +81,7 @@ export default function DriverVerification({ onBack }: Props) {
           <View style={[styles.infoCard, { backgroundColor: colors.primary + "10" }]}>
             <IconSymbol name="info.circle.fill" size={18} color={colors.primary} />
             <Text style={[styles.infoText, { color: colors.primary }]}>
-              Enter your Bahamas driver's license details. This information will be verified.
+              Enter your Bahamas driver&apos;s license details. This information will be verified.
             </Text>
           </View>
 
