@@ -22,9 +22,9 @@ The Postgres design separates agency access (`superadmin`, `admin`, `customer`) 
 - all three per-site passwords are strong and different;
 - a server-only service-role credential is present.
 
-Passwords are read from ignored environment values and are never printed or committed. The script is idempotent for the configured addresses and marks the accounts as demo data. It is blocked when either `NODE_ENV` or the hosting `CONTEXT` is production.
+Passwords are read from ignored environment values and are never printed or committed. The script is idempotent for the configured addresses and marks the accounts as demo data. It normalizes environment-name case and surrounding whitespace, and is blocked when either `NODE_ENV` or the hosting `CONTEXT` is production.
 
-For a remote run, `SEED_ALLOWED_PROJECT_REF` must exactly match the project ref in `SUPABASE_URL`. The script refuses to adopt an existing Auth user unless its metadata already identifies it as this site's fictional seed identity.
+For a remote run, `SUPABASE_URL` must use HTTPS and `SEED_ALLOWED_PROJECT_REF` must exactly match its project ref. Localhost may use HTTP for the local Supabase stack. The script refuses to adopt an existing Auth user unless its metadata already identifies it as this site's fictional seed identity.
 
 ## Data and storage boundaries
 

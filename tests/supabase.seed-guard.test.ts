@@ -22,6 +22,21 @@ describe("Supabase demo seed guard", () => {
     );
   });
 
+  it.each([
+    { NODE_ENV: " ProDuction " },
+    { CONTEXT: "PRODUCTION" },
+  ])("blocks normalized production environment values", (productionEnvironment) => {
+    expect(() => validateSeedEnvironment({ ...validEnvironment, ...productionEnvironment })).toThrow(
+      /blocked in production/,
+    );
+  });
+
+  it("normalizes the declared non-production project environment", () => {
+    expect(() =>
+      validateSeedEnvironment({ ...validEnvironment, SUPABASE_PROJECT_ENV: " STaGiNg " }),
+    ).not.toThrow();
+  });
+
   it("requires an explicit opt-in", () => {
     expect(() => validateSeedEnvironment({ ...validEnvironment, ALLOW_DEMO_SEEDING: "false" })).toThrow(
       /ALLOW_DEMO_SEEDING/,
@@ -54,6 +69,16 @@ describe("Supabase demo seed guard", () => {
         SEED_ALLOWED_PROJECT_REF: "differentref",
       }),
     ).toThrow(/does not match SEED_ALLOWED_PROJECT_REF/);
+  });
+
+  it("requires HTTPS for hosted Supabase projects", () => {
+    expect(() =>
+      validateSeedEnvironment({
+        ...validEnvironment,
+        SUPABASE_URL: "http://actualref.supabase.co",
+        SEED_ALLOWED_PROJECT_REF: "actualref",
+      }),
+    ).toThrow(/Hosted SUPABASE_URL must use https/);
   });
 
   it("refuses to seed another site's slug", () => {

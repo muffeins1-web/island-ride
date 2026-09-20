@@ -20,6 +20,10 @@ export type SeedConfiguration = {
 
 const NON_PRODUCTION_ENVIRONMENTS = new Set(["local", "development", "test", "staging"]);
 
+function normalizedEnvironment(value: string | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
 function required(env: Environment, key: string): string {
   const value = env[key]?.trim();
   if (!value) throw new Error(`${key} is required`);
@@ -45,11 +49,11 @@ function validatePassword(value: string, key: string): string {
 }
 
 export function validateSeedEnvironment(env: Environment = process.env): SeedConfiguration {
-  const projectEnvironment = required(env, "SUPABASE_PROJECT_ENV").toLowerCase();
+  const projectEnvironment = normalizedEnvironment(required(env, "SUPABASE_PROJECT_ENV"));
   if (!NON_PRODUCTION_ENVIRONMENTS.has(projectEnvironment)) {
     throw new Error("Demo seeding is restricted to local, development, test, or staging projects");
   }
-  if (env.NODE_ENV === "production" || env.CONTEXT === "production") {
+  if ([env.NODE_ENV, env.CONTEXT].some((value) => normalizedEnvironment(value) === "production")) {
     throw new Error("Demo seeding is blocked in production");
   }
   if (env.ALLOW_DEMO_SEEDING !== "true") {
@@ -108,6 +112,9 @@ export function validateSeedEnvironment(env: Environment = process.env): SeedCon
   }
   const isLocal = supabaseUrl.hostname === "localhost" || supabaseUrl.hostname === "127.0.0.1";
   if (!isLocal) {
+    if (supabaseUrl.protocol !== "https:") {
+      throw new Error("Hosted SUPABASE_URL must use https");
+    }
     const allowedProjectRef = required(env, "SEED_ALLOWED_PROJECT_REF");
     if (supabaseUrl.hostname !== `${allowedProjectRef}.supabase.co`) {
       throw new Error("SUPABASE_URL does not match SEED_ALLOWED_PROJECT_REF");
