@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "pinned": {
+    "schemaVersion": 1,
+    "sourceRoot": "C:\\Users\\aisup\\OneDrive\\Desktop\\Agency-OS-Obsidian-Vault\\Agency-OS-Obsidian-Vault",
+    "resolvedAt": "2026-09-20T19:33:53.216Z",
+    "scope": "backend",
+    "workflow": {
+      "id": "AOS-ADOPT-001",
+      "version": "2.0.0",
+      "path": "08 SOPs/SOP - Apply Agency OS Website Standards v2.0.0.md",
+      "absolutePath": "C:\\Users\\aisup\\OneDrive\\Desktop\\Agency-OS-Obsidian-Vault\\Agency-OS-Obsidian-Vault\\08 SOPs\\SOP - Apply Agency OS Website Standards v2.0.0.md",
+      "sha256": "e1ea561b67a78312c6c0b514e78be06e4b8c278ecf47143b539084463aebd12c",
+      "approvedBy": "Agency owner via September 20, 2026 voice request",
+      "approvedOn": "2026-09-20",
+      "decision": "Explicit request for flow three production offline PWA and final local-to-GitHub-CI/CD-to-Netlify deployment flow",
+      "acceptanceIds": []
+    },
+    "sops": [
+      {
+        "id": "AOS-BE-001",
+        "version": "1.1.0",
+        "path": "11 Standards/05 Platform Governance and Operations/AOS-BE-001 - Backend Dashboard Standard/v1.1.0.md",
+        "absolutePath": "C:\\Users\\aisup\\OneDrive\\Desktop\\Agency-OS-Obsidian-Vault\\Agency-OS-Obsidian-Vault\\11 Standards\\05 Platform Governance and Operations\\AOS-BE-001 - Backend Dashboard Standard\\v1.1.0.md",
+        "sha256": "49fea1d7c2c7b6036c32f8d2e06a8b36135b835110fa1b1e7a6b45f2e6471bd5",
+        "approvedBy": "Agency owner via September 20, 2026 reciprocal logo-navigation requirement",
+        "approvedOn": "2026-09-20",
+        "decision": "Explicit requirement for reciprocal backend/frontend logo navigation and validation; source task 01a0bf6e-ef77-7b53-a2d5-2bc913fa9830",
+        "acceptanceIds": [
+          "BE-01",
+          "BE-02",
+          "BE-03",
+          "BE-04",
+          "BE-05",
+          "BE-06",
+          "BE-07",
+          "BE-08",
+          "BE-09",
+          "BE-10",
+          "BE-11",
+          "BE-12",
+          "BE-13",
+          "BE-14",
+          "BE-15",
+          "BE-16",
+          "BE-17",
+          "BE-18",
+          "BE-19"
+        ]
+      }
+    ]
+  },
+  "project": "island-ride",
+  "baseline": "fc258cd34d161201dd21cce997224672d07b32a9",
+  "auditComplete": true,
+  "gapMap": {
+    "compliant": [
+      "Existing Manus/MySQL build, OAuth callback, rider/driver screens, and app routes remain intact.",
+      "No credential or demo password is tracked; local environment files remain ignored."
+    ],
+    "missing": [
+      "The admin dashboard shell, mobile admin navigation, account controls, and reciprocal logo navigation are not implemented in the current app.",
+      "Supabase migrations and RLS have not been applied to a running local or cloud project.",
+      "Business modules still use mock data or AsyncStorage and are not yet wired to the staged Supabase adapter."
+    ],
+    "conflicting": [
+      "The existing MySQL role enum uses user/admin while the Agency role contract requires superadmin/admin/customer.",
+      "The client rider/driver switch is an operational capability and cannot safely replace an authorization role.",
+      "The existing Manus OAuth session model must be reconciled with Supabase Auth before cutover."
+    ],
+    "preserve": [
+      "Keep Manus OAuth, MySQL/Drizzle, Express/tRPC, Expo web/native routes, Bahamian fare behavior, and rider/driver UI functioning during staged migration.",
+      "Do not change payment providers; store only provider references and status in Supabase."
+    ]
+  },
+  "changes": [
+    "Added a local Supabase project contract, versioned Postgres migration, RLS policies, private storage buckets, audit triggers, and tenant-scoped settings.",
+    "Separated platform roles from rider and driver profiles; added ride, fare, payment-reference, rating, earnings, payout, notification, verification, and service-area models.",
+    "Added a dependency-free server REST adapter selected only when BACKEND_PROVIDER=supabase; MySQL remains the default.",
+    "Added an explicit non-production Auth seeder for three example.invalid identities with unique environment-managed passwords.",
+    "Added environment documentation, staged migration guidance, schema validation, and focused configuration/seed-guard tests."
+  ],
+  "validation": [
+    {
+      "command": "corepack pnpm check",
+      "result": "Pass: TypeScript completed with no errors."
+    },
+    {
+      "command": "corepack pnpm test",
+      "result": "Pass outside the process sandbox: 10 test files and 85 tests passed, including 9 new Supabase tests."
+    },
+    {
+      "command": "corepack pnpm build",
+      "result": "Pass: the existing Express server bundled to dist/index.js."
+    },
+    {
+      "command": "corepack pnpm supabase:check",
+      "result": "Pass: 1 migration, 18 required tables, RLS, roles, storage, and audit hooks validated."
+    },
+    {
+      "command": "node node_modules\\eslint\\bin\\eslint.js server\\supabase.ts scripts\\supabase\\seed-users.ts tests\\supabase.config.test.ts tests\\supabase.seed-guard.test.ts",
+      "result": "Pass: no errors or warnings in changed TypeScript files; ESLint emitted only its existing module-type process warning."
+    },
+    {
+      "command": "node node_modules\\eslint\\bin\\eslint.js .",
+      "result": "Fail: repository baseline contains 5 pre-existing hook-rule errors and 31 remaining warnings outside the changed files."
+    },
+    {
+      "command": "Supabase CLI migration apply and RLS integration tests",
+      "result": "Not run: no local Supabase CLI/runtime or authorized cloud project exists in this task."
+    },
+    {
+      "command": "secret assignment scan across .env.example, docs, scripts, server, supabase, and tests",
+      "result": "Pass: no service-role key or seed password value is committed."
+    }
+  ],
+  "evidenceNotes": [
+    "No Supabase cloud project, Auth user, credential, deployment, payment-provider change, or production record was created.",
+    "The adoption remains partial until live RLS denial tests, dashboard capabilities, business-module integration, and reciprocal logo routing are implemented."
+  ],
+  "checks": {
+    "BE-01": {
+      "status": "pending",
+      "evidence": "No admin shell exists in the current application.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-02": {
+      "status": "pending",
+      "evidence": "No backend sidebar or primary backend logo exists yet.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-03": {
+      "status": "pending",
+      "evidence": "Account data and logout exist in the Manus path, but the required dashboard identity menu is absent.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-04": {
+      "status": "pending",
+      "evidence": "The current tabs are rider/driver product navigation, not the required admin navigation.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-05": {
+      "status": "pending",
+      "evidence": "Admin mobile navigation has not been implemented or exercised.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-06": {
+      "status": "pending",
+      "evidence": "Migration contains tenant/owner/driver RLS policies and privilege guards; live positive and negative database tests remain outstanding.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-07": {
+      "status": "pending",
+      "evidence": "Seeder requires three unique per-site passwords outside Git, but MFA/centralized agency identity has not been exercised.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-08": {
+      "status": "pending",
+      "evidence": "Seed guards and fictional identities passed unit tests; no Auth accounts were created without a local/cloud project.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-09": {
+      "status": "pending",
+      "evidence": "Email settings store only an SMTP secret reference; provider configuration and sandbox delivery are not wired.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-10": {
+      "status": "pending",
+      "evidence": "SEO settings are modeled with public-read/admin-write RLS but are not connected to the Expo web output.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-11": {
+      "status": "pending",
+      "evidence": "Role-ceiling and membership controls are modeled; admin UI/API CRUD is not wired.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-12": {
+      "status": "pending",
+      "evidence": "Driver profiles are explicitly separate from admin roles; end-to-end staff/driver management is not wired.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-13": {
+      "status": "pending",
+      "evidence": "Rider/customer ownership policies are modeled; persistent customer CRUD is not integrated into the app.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-14": {
+      "status": "pending",
+      "evidence": "Templates, automation rules, deduplication keys, and retry policy fields are modeled but no safe delivery worker is connected.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-15": {
+      "status": "pending",
+      "evidence": "Explicit expiring impersonation grants are modeled; no real impersonation flow was authorized or implemented.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-16": {
+      "status": "pending",
+      "evidence": "Redacted audit triggers and admin-scoped read policy are present; durability has not been exercised against Postgres.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-17": {
+      "status": "pending",
+      "evidence": "The existing app builds unchanged and the Supabase business schema is prepared, but UI business flows still use mock/AsyncStorage state.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-18": {
+      "status": "fail",
+      "evidence": "TypeScript, 85 tests, server build, focused lint, and schema validation pass; full lint reports 5 existing errors in hooks/use-location.ts.",
+      "reason": "The repository-wide lint gate is not clean and Supabase integration tests could not run without a project.",
+      "acceptedBy": "",
+      "decision": ""
+    },
+    "BE-19": {
+      "status": "pending",
+      "evidence": "The current app has no paired backend/public logo routes; staged configuration does not claim this contract.",
+      "reason": "",
+      "acceptedBy": "",
+      "decision": ""
+    }
+  },
+  "result": "partial",
+  "runId": "2026-09-20T19-56-49-818Z-e0a6a3fb-8fc5-41c8-a5a5-1616bc570eb9",
+  "recordedAt": "2026-09-20T19:56:49.818Z",
+  "sourceRootVerified": "C:\\Users\\aisup\\OneDrive\\Desktop\\Agency-OS-Obsidian-Vault\\Agency-OS-Obsidian-Vault",
+  "runtimeVersion": "2.0.0"
+}

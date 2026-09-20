@@ -6,6 +6,8 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { recordResendDeliveryEvent } from "../email/delivery";
+import { readResendWebhookSecret, verifyResendWebhook } from "../email/resend";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -70,6 +72,46 @@ async function startServer() {
     }
     next();
   });
+
+  app.post(
+    "/api/webhooks/resend",
+    express.raw({ type: "application/json", limit: "128kb" }),
+    async (req, res) => {
+      if (!Buffer.isBuffer(req.body)) {
+        res.status(400).json({ error: "Webhook body must be raw JSON" });
+        return;
+      }
+      let secret: string;
+      try {
+        secret = readResendWebhookSecret();
+      } catch {
+        res.status(503).json({ error: "Email webhook is not configured" });
+        return;
+      }
+      let event;
+      try {
+        event = verifyResendWebhook(
+          req.body,
+          {
+            id: req.header("svix-id") || undefined,
+            timestamp: req.header("svix-timestamp") || undefined,
+            signature: req.header("svix-signature") || undefined,
+          },
+          secret,
+        );
+      } catch {
+        res.status(400).json({ error: "Invalid Resend webhook" });
+        return;
+      }
+      try {
+        await recordResendDeliveryEvent(event);
+        res.status(204).end();
+      } catch (error) {
+        console.error("[email] Unable to persist Resend delivery event", error);
+        res.status(503).json({ error: "Email event persistence is unavailable" });
+      }
+    },
+  );
 
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ limit: "10mb", extended: true }));

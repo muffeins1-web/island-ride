@@ -17,6 +17,9 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "supabase:check": "node scripts/supabase/validate-schema.mjs",
+    "supabase:types": "node scripts/supabase/generate-types.mjs",
+    "supabase:seed:demo": "tsx scripts/supabase/seed-users.ts",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "qr": "node scripts/generate_qr.mjs"
